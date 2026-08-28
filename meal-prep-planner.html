@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Meal Prep Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --kraft: #e4d9c3;
+    --kraft-dark: #c9b896;
+    --ink: #21301f;
+    --herb: #4c6b3f;
+    --herb-dark: #3a5230;
+    --mustard: #c98a2c;
+    --tomato: #b3452f;
+    --cream: #fbf6ea;
+    --shadow: rgba(33,48,31,0.22);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--kraft);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(33,48,31,0.06) 1px, transparent 0);
+    background-size: 18px 18px;
+    color: var(--ink);
+    font-family: 'Libre Franklin', sans-serif;
+    min-height: 100vh;
+    padding: 28px 20px 80px;
+  }
+  .wrap{ max-width: 1180px; margin: 0 auto; }
+
+  /* ---------- Header ---------- */
+  .board-header{
+    background: var(--ink);
+    color: var(--kraft);
+    border-radius: 10px;
+    padding: 22px 26px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 0 var(--shadow);
+    position: relative;
+  }
+  .board-header::before{
+    content:"";
+    position:absolute;
+    top:-6px; left: 24px;
+    width: 14px; height: 14px;
+    background: var(--tomato);
+    border-radius: 50%;
+    box-shadow: 40px 0 0 var(--mustard), 80px 0 0 var(--herb);
+    opacity: 0.9;
+  }
+  .board-title{
+    font-family:'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: clamp(22px, 3.4vw, 34px);
+    font-weight: 700;
+    margin: 6px 0 4px;
+  }
+  .board-sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    opacity: 0.85;
+    letter-spacing: 0.02em;
+  }
+  .week-nav{
+    display:flex; align-items:center; gap:10px;
+  }
+  .nav-btn{
+    background: transparent;
+    border: 1.5px solid var(--kraft);
+    color: var(--kraft);
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background .15s, transform .15s;
+  }
+  .nav-btn:hover{ background: rgba(251,246,234,0.12); transform: translateY(-1px); }
+  .nav-btn:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline: 3px solid var(--mustard);
+    outline-offset: 2px;
+  }
+  .today-btn{
+    font-family:'IBM Plex Mono', monospace;
+    background: var(--mustard);
+    color: var(--ink);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+  }
+  .today-btn:hover{ filter: brightness(1.06); }
+  .header-actions{ display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
+  .ghost-btn{
+    font-family:'IBM Plex Mono', monospace;
+    background: transparent;
+    color: var(--kraft);
+    border: 1px dashed rgba(251,246,234,0.55);
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover{ background: rgba(251,246,234,0.08); }
+
+  /* ---------- Week Grid ---------- */
+  .week-grid{
+    margin-top: 26px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 980px){
+    .week-grid{ grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px){
+    .week-grid{ grid-template-columns: 1fr; }
+  }
+
+  .day-card{
+    background: var(--cream);
+    border-radius: 4px 4px 10px 10px;
+    padding: 14px 12px 16px;
+    box-shadow: 0 6px 0 rgba(33,48,31,0.12), 0 2px 6px rgba(33,48,31,0.15);
+    position: relative;
+    transition: transform .15s ease;
+  }
+  .day-card:nth-child(odd){ transform: rotate(-0.6deg); }
+  .day-card:nth-child(even){ transform: rotate(0.5deg); }
+  .day-card:hover, .day-card:focus-within{ transform: rotate(0deg); }
+  .day-card::before{
+    content:"";
+    position:absolute;
+    top: -7px; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 16px;
+    background: var(--tomato);
+    border-radius: 50%;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15);
+  }
+  .day-card.is-today{ box-shadow: 0 0 0 2px var(--mustard), 0 6px 0 rgba(33,48,31,0.12); }
+  .day-card.is-today::before{ background: var(--mustard); }
+
+  .day-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom: 1px dashed var(--kraft-dark);
+    padding-bottom: 8px; margin-bottom: 10px;
+  }
+  .day-name{
+    font-family:'Oswald', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .day-date{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--herb-dark);
+  }
+  .clear-day{
+    background:none; border:none; cursor:pointer;
+    font-size: 10.5px; font-family:'IBM Plex Mono', monospace;
+    color: var(--tomato); opacity: 0.55; padding: 2px;
+  }
+  .clear-day:hover{ opacity: 1; text-decoration: underline; }
+
+  .slot{
+    margin-bottom: 9px;
+  }
+  .slot-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--herb-dark);
+    opacity: 0.75;
+    display:block;
+    margin-bottom: 3px;
+  }
+  .slot-btn{
+    width: 100%;
+    text-align:left;
+    border: 1.5px dashed var(--kraft-dark);
+    background: rgba(255,255,255,0.4);
+    border-radius: 6px;
+    padding: 7px 8px;
+    font-family: 'Libre Franklin', sans-serif;
+    font-size: 12.5px;
+    color: var(--ink);
+    cursor: pointer;
+    min-height: 34px;
+    display:flex; align-items:center; justify-content:space-between; gap:6px;
+  }
+  .slot-btn:hover{ border-color: var(--herb); background: rgba(255,255,255,0.7); }
+  .slot-btn.filled{
+    border-style: solid;
+    background: var(--kraft);
+  }
+  .slot-btn .meal-name{ font-weight: 600; line-height:1.25; }
+  .tag-dot{
+    width: 8px; height: 8px; border-radius:50%; flex: none;
+  }
+  .tag-breakfast{ background: var(--mustard); }
+  .tag-lunch{ background: var(--herb); }
+  .tag-dinner{ background: var(--tomato); }
+  .slot-x{
+    background:none; border:none; color: var(--tomato); font-size: 14px;
+    cursor:pointer; padding: 0 2px; line-height:1; flex:none;
+  }
+  .plus{ opacity: 0.55; font-size: 15px; }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position: fixed; inset: 0;
+    background: rgba(33,48,31,0.55);
+    display:flex; align-items:center; justify-content:center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .hidden{ display:none !important; }
+  .modal{
+    background: var(--cream);
+    width: min(440px, 100%);
+    max-height: 86vh;
+    overflow-y: auto;
+    border-radius: 10px;
+    padding: 22px;
+    box-shadow: 0 14px 0 rgba(33,48,31,0.25);
+  }
+  .modal-title{
+    font-family:'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 18px;
+    margin: 0 0 2px;
+  }
+  .modal-sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--herb-dark);
+    margin-bottom: 14px;
+  }
+  .meal-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--kraft-dark);
+    margin-bottom: 7px;
+    background: rgba(255,255,255,0.5);
+  }
+  .meal-row button.assign{
+    background: var(--herb); color: var(--cream); border:none;
+    font-family:'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 6px 10px; border-radius: 6px; cursor:pointer; flex:none;
+  }
+  .meal-row button.assign:hover{ background: var(--herb-dark); }
+  .meal-row .meal-info{ min-width: 0; }
+  .meal-row .meal-info .n{ font-weight: 600; font-size: 13.5px; }
+  .meal-row .meal-info .i{ font-size: 11px; color: var(--herb-dark); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .meal-row button.del-meal{
+    background:none; border:none; color: var(--tomato); opacity:0.5; cursor:pointer; font-size:13px; flex:none;
+  }
+  .meal-row button.del-meal:hover{ opacity:1; }
+
+  .divider{ border:none; border-top:1px dashed var(--kraft-dark); margin: 14px 0; }
+
+  form.new-meal label{
+    display:block; font-family:'IBM Plex Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--herb-dark);
+    margin-bottom: 4px; margin-top: 10px;
+  }
+  form.new-meal input, form.new-meal textarea, form.new-meal select{
+    width: 100%;
+    font-family: 'Libre Franklin', sans-serif;
+    font-size: 13.5px;
+    padding: 8px 9px;
+    border: 1.5px solid var(--kraft-dark);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+  }
+  form.new-meal textarea{ min-height: 54px; resize: vertical; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top: 16px; }
+  .btn-primary{
+    background: var(--mustard); color: var(--ink); border:none;
+    font-family:'IBM Plex Mono', monospace; font-weight:600; font-size: 12.5px;
+    padding: 9px 16px; border-radius: 7px; cursor:pointer;
+  }
+  .btn-primary:hover{ filter: brightness(1.05); }
+  .btn-secondary{
+    background: transparent; color: var(--ink); border: 1.5px solid var(--kraft-dark);
+    font-family:'IBM Plex Mono', monospace; font-size: 12.5px;
+    padding: 9px 14px; border-radius: 7px; cursor:pointer;
+  }
+  .btn-secondary:hover{ background: rgba(0,0,0,0.04); }
+
+  /* ---------- Grocery Receipt ---------- */
+  .receipt-wrap{
+    margin-top: 34px;
+    display:flex;
+    justify-content:center;
+  }
+  .receipt{
+    background: var(--cream);
+    width: min(430px, 100%);
+    padding: 22px 24px 30px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    box-shadow: 0 10px 22px rgba(33,48,31,0.18);
+    position: relative;
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 96%,
+      95% 100%, 90% 96%, 85% 100%, 80% 96%, 75% 100%, 70% 96%, 65% 100%,
+      60% 96%, 55% 100%, 50% 96%, 45% 100%, 40% 96%, 35% 100%, 30% 96%,
+      25% 100%, 20% 96%, 15% 100%, 10% 96%, 5% 100%, 0% 96%
+    );
+  }
+  .receipt h2{
+    font-family:'Oswald', sans-serif;
+    text-transform: uppercase;
+    text-align:center;
+    letter-spacing: 0.08em;
+    font-size: 17px;
+    margin: 0 0 2px;
+  }
+  .receipt .r-sub{
+    text-align:center; font-size: 10.5px; color: var(--herb-dark); margin-bottom: 14px;
+  }
+  .receipt-list{ list-style:none; padding:0; margin:0; }
+  .receipt-list li{
+    display:flex; align-items:center; gap:9px;
+    font-size: 13px;
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--kraft-dark);
+  }
+  .receipt-list li input[type=checkbox]{
+    width: 15px; height: 15px; accent-color: var(--herb); flex: none; cursor: pointer;
+  }
+  .receipt-list li .item-name{ flex: 1; }
+  .receipt-list li.checked .item-name{
+    text-decoration: line-through;
+    color: var(--herb-dark);
+    opacity: 0.65;
+  }
+  .receipt-list li .count{ font-size: 10.5px; opacity: 0.55; flex:none; }
+  .receipt-empty{
+    text-align:center; font-size: 12.5px; color: var(--herb-dark); padding: 10px 0 4px;
+  }
+  .receipt-actions{
+    display:flex; justify-content:center; gap: 10px; margin-top: 16px;
+  }
+  .receipt-actions button{
+    font-family:'IBM Plex Mono', monospace; font-size: 11px;
+    background: none; border: 1px solid var(--kraft-dark); color: var(--ink);
+    padding: 7px 11px; border-radius: 6px; cursor: pointer;
+  }
+  .receipt-actions button:hover{ background: rgba(0,0,0,0.05); }
+
+  .toast{
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--cream);
+    font-family:'IBM Plex Mono', monospace; font-size: 12.5px;
+    padding: 10px 18px; border-radius: 8px;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+    z-index: 80;
+  }
+  .toast.show{ opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="board-header">
+    <div>
+      <div class="board-title">Meal Prep Board</div>
+      <div class="board-sub" id="weekRange">—</div>
+    </div>
+    <div class="header-actions">
+      <div class="week-nav">
+        <button class="nav-btn" id="prevWeek" aria-label="Previous week">‹</button>
+        <button class="today-btn" id="todayBtn">This week</button>
+        <button class="nav-btn" id="nextWeek" aria-label="Next week">›</button>
+      </div>
+      <button class="ghost-btn" id="clearWeekBtn">Clear week</button>
+    </div>
+  </div>
+
+  <div class="week-grid" id="weekGrid"></div>
+
+  <div class="receipt-wrap">
+    <div class="receipt">
+      <h2>Grocery List</h2>
+      <div class="r-sub" id="receiptSub">for this week's plan</div>
+      <ul class="receipt-list" id="groceryList"></ul>
+      <div class="receipt-actions">
+        <button id="copyListBtn">Copy list</button>
+        <button id="clearChecksBtn">Uncheck all</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Picker Modal -->
+<div class="overlay hidden" id="pickerOverlay">
+  <div class="modal">
+    <div class="modal-title" id="pickerTitle">Choose a meal</div>
+    <div class="modal-sub" id="pickerSub"></div>
+
+    <div id="mealListArea"></div>
+
+    <hr class="divider">
+    <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color: var(--herb-dark);">+ New meal</div>
+    <form class="new-meal" id="newMealForm">
+      <label for="mealNameInput">Name</label>
+      <input id="mealNameInput" type="text" placeholder="e.g. Lemon Garlic Shrimp" required>
+      <label for="mealTagInput">Type</label>
+      <select id="mealTagInput">
+        <option value="breakfast">Breakfast</option>
+        <option value="lunch">Lunch</option>
+        <option value="dinner">Dinner</option>
+      </select>
+      <label for="mealIngInput">Ingredients (comma separated)</label>
+      <textarea id="mealIngInput" placeholder="shrimp, garlic, lemon, olive oil, rice"></textarea>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="pickerCloseBtn">Cancel</button>
+        <button type="submit" class="btn-primary">Add &amp; assign</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const SLOTS = ['breakfast','lunch','dinner'];
+  const SEED_MEALS = [
+    {id:'m1', name:'Overnight Oats', tag:'breakfast', ingredients:['rolled oats','milk','chia seeds','honey','mixed berries']},
+    {id:'m2', name:'Greek Yogurt Bowl', tag:'breakfast', ingredients:['greek yogurt','granola','banana','honey']},
+    {id:'m3', name:'Grilled Chicken Salad', tag:'lunch', ingredients:['chicken breast','romaine lettuce','cherry tomatoes','cucumber','olive oil']},
+    {id:'m4', name:'Turkey Wrap', tag:'lunch', ingredients:['turkey slices','tortilla','spinach','avocado','mustard']},
+    {id:'m5', name:'Veggie Stir Fry', tag:'dinner', ingredients:['broccoli','bell pepper','carrot','soy sauce','rice','garlic']},
+    {id:'m6', name:'Baked Salmon', tag:'dinner', ingredients:['salmon fillet','lemon','asparagus','olive oil','garlic']}
+  ];
+
+  let library = [];
+  let plan = {};       // { "0":{breakfast:mealId,...}, ... } keyed by weekday index as string
+  let checks = {};     // { ingredientKey: true }
+  let weekStart = getMonday(new Date());
+  let activeSlot = null; // {day, slot}
+
+  const weekGrid = document.getElementById('weekGrid');
+  const weekRangeEl = document.getElementById('weekRange');
+  const groceryListEl = document.getElementById('groceryList');
+  const receiptSub = document.getElementById('receiptSub');
+  const overlay = document.getElementById('pickerOverlay');
+  const pickerTitle = document.getElementById('pickerTitle');
+  const pickerSub = document.getElementById('pickerSub');
+  const mealListArea = document.getElementById('mealListArea');
+  const toastEl = document.getElementById('toast');
+
+  function getMonday(d){
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = (day === 0 ? -6 : 1) - day; // shift so Monday = start
+    date.setDate(date.getDate() + diff);
+    date.setHours(0,0,0,0);
+    return date;
+  }
+  function isoDate(d){ return d.toISOString().slice(0,10); }
+  function weekKey(){ return isoDate(weekStart); }
+  function fmtShort(d){ return d.toLocaleDateString(undefined, {month:'short', day:'numeric'}); }
+  function isSameDay(a,b){ return a.toDateString() === b.toDateString(); }
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=> toastEl.classList.remove('show'), 1800);
+  }
+
+  async function storageGet(key){
+    try{
+      const res = await window.storage.get(key, false);
+      return res ? res.value : null;
+    }catch(e){ return null; }
+  }
+  async function storageSet(key, value){
+    try{ await window.storage.set(key, value, false); }
+    catch(e){ /* best effort */ }
+  }
+
+  async function loadLibrary(){
+    const raw = await storageGet('meal-library');
+    if(raw){
+      try{ library = JSON.parse(raw); return; }catch(e){}
+    }
+    library = SEED_MEALS.slice();
+    await storageSet('meal-library', JSON.stringify(library));
+  }
+  async function saveLibrary(){ await storageSet('meal-library', JSON.stringify(library)); }
+
+  async function loadWeekData(){
+    const pRaw = await storageGet('week-plan:' + weekKey());
+    plan = {};
+    if(pRaw){ try{ plan = JSON.parse(pRaw); }catch(e){ plan = {}; } }
+    const cRaw = await storageGet('grocery-checks:' + weekKey());
+    checks = {};
+    if(cRaw){ try{ checks = JSON.parse(cRaw); }catch(e){ checks = {}; } }
+  }
+  async function savePlan(){ await storageSet('week-plan:' + weekKey(), JSON.stringify(plan)); }
+  async function saveChecks(){ await storageSet('grocery-checks:' + weekKey(), JSON.stringify(checks)); }
+
+  function mealById(id){ return library.find(m => m.id === id); }
+
+  function renderHeader(){
+    const end = new Date(weekStart);
+    end.setDate(end.getDate() + 6);
+    weekRangeEl.textContent = fmtShort(weekStart) + ' – ' + fmtShort(end);
+  }
+
+  function renderGrid(){
+    weekGrid.innerHTML = '';
+    const today = new Date();
+    for(let i=0;i<7;i++){
+      const dayDate = new Date(weekStart);
+      dayDate.setDate(dayDate.getDate() + i);
+      const card = document.createElement('div');
+      card.className = 'day-card' + (isSameDay(dayDate, today) ? ' is-today' : '');
+
+      const head = document.createElement('div');
+      head.className = 'day-head';
+      head.innerHTML = `
+        <div>
+          <div class="day-name">${DAY_NAMES[i]}</div>
+          <div class="day-date">${fmtShort(dayDate)}</div>
+        </div>
+        <button class="clear-day" data-day="${i}">clear</button>
+      `;
+      card.appendChild(head);
+
+      SLOTS.forEach(slot => {
+        const wrap = document.createElement('div');
+        wrap.className = 'slot';
+        const label = document.createElement('span');
+        label.className = 'slot-label';
+        label.textContent = slot;
+        wrap.appendChild(label);
+
+        const mealId = plan[i] && plan[i][slot];
+        const meal = mealId ? mealById(mealId) : null;
+
+        const btn = document.createElement('button');
+        btn.className = 'slot-btn' + (meal ? ' filled' : '');
+        btn.setAttribute('data-day', i);
+        btn.setAttribute('data-slot', slot);
+
+        if(meal){
+          btn.innerHTML = `
+            <span class="tag-dot tag-${slot}"></span>
+            <span class="meal-name" style="flex:1;">${escapeHtml(meal.name)}</span>
+            <span class="slot-x" data-clear="1" title="Remove">✕</span>
+          `;
+        } else {
+          btn.innerHTML = `<span class="tag-dot tag-${slot}"></span><span style="flex:1; opacity:.6;">Add ${slot}</span><span class="plus">+</span>`;
+        }
+        wrap.appendChild(btn);
+        card.appendChild(wrap);
+      });
+
+      weekGrid.appendChild(card);
+    }
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
+  function compileGrocery(){
+    const map = new Map(); // key: lowercase ingredient -> {display, count}
+    for(let i=0;i<7;i++){
+      const dayPlan = plan[i];
+      if(!dayPlan) continue;
+      SLOTS.forEach(slot => {
+        const mealId = dayPlan[slot];
+        if(!mealId) return;
+        const meal = mealById(mealId);
+        if(!meal) return;
+        (meal.ingredients || []).forEach(ing => {
+          const clean = ing.trim();
+          if(!clean) return;
+          const key = clean.toLowerCase();
+          if(map.has(key)){ map.get(key).count += 1; }
+          else{ map.set(key, {display: clean, count: 1}); }
+        });
+      });
+    }
+    return Array.from(map.entries())
+      .map(([key, v]) => ({key, display: v.display, count: v.count}))
+      .sort((a,b) => a.display.localeCompare(b.display));
+  }
+
+  function renderGrocery(){
+    const items = compileGrocery();
+    groceryListEl.innerHTML = '';
+    if(items.length === 0){
+      receiptSub.textContent = 'nothing planned yet';
+      const li = document.createElement('li');
+      li.style.border = 'none';
+      li.innerHTML = '<span class="receipt-empty" style="width:100%;">Assign some meals to see your list here.</span>';
+      groceryListEl.appendChild(li);
+      return;
+    }
+    receiptSub.textContent = items.length + ' item' + (items.length===1?'':'s') + ' for this week\'s plan';
+    items.forEach(item => {
+      const li = document.createElement('li');
+      const isChecked = !!checks[item.key];
+      if(isChecked) li.classList.add('checked');
+      li.innerHTML = `
+        <input type="checkbox" ${isChecked ? 'checked' : ''} data-key="${escapeHtml(item.key)}">
+        <span class="item-name">${escapeHtml(item.display)}</span>
+        ${item.count > 1 ? `<span class="count">×${item.count}</span>` : ''}
+      `;
+      groceryListEl.appendChild(li);
+    });
+  }
+
+  function renderAll(){
+    renderHeader();
+    renderGrid();
+    renderGrocery();
+  }
+
+  // ---- Picker modal ----
+  function openPicker(day, slot){
+    activeSlot = {day, slot};
+    const dayDate = new Date(weekStart);
+    dayDate.setDate(dayDate.getDate() + day);
+    pickerTitle.textContent = 'Choose a ' + slot;
+    pickerSub.textContent = DAY_NAMES[day] + ', ' + fmtShort(dayDate);
+    document.getElementById('mealTagInput').value = slot;
+    renderMealList(slot);
+    overlay.classList.remove('hidden');
+    document.getElementById('mealNameInput').focus();
+  }
+  function closePicker(){
+    overlay.classList.add('hidden');
+    activeSlot = null;
+    document.getElementById('newMealForm').reset();
+  }
+
+  function renderMealList(preferredTag){
+    const sorted = library.slice().sort((a,b) => {
+      if(a.tag === preferredTag && b.tag !== preferredTag) return -1;
+      if(b.tag === preferredTag && a.tag !== preferredTag) return 1;
+      return a.name.localeCompare(b.name);
+    });
+    mealListArea.innerHTML = '';
+    if(sorted.length === 0){
+      mealListArea.innerHTML = '<div style="font-size:12.5px; color:var(--herb-dark);">No saved meals yet — add one below.</div>';
+      return;
+    }
+    sorted.forEach(meal => {
+      const row = document.createElement('div');
+      row.className = 'meal-row';
+      row.innerHTML = `
+        <span class="tag-dot tag-${meal.tag}" style="margin-top:2px;"></span>
+        <div class="meal-info" style="flex:1;">
+          <div class="n">${escapeHtml(meal.name)}</div>
+          <div class="i">${escapeHtml((meal.ingredients||[]).join(', '))}</div>
+        </div>
+        <button class="assign" data-id="${meal.id}">Use</button>
+        <button class="del-meal" data-id="${meal.id}" title="Delete from library">✕</button>
+      `;
+      mealListArea.appendChild(row);
+    });
+  }
+
+  async function assignMeal(mealId){
+    if(!activeSlot) return;
+    const {day, slot} = activeSlot;
+    if(!plan[day]) plan[day] = {};
+    plan[day][slot] = mealId;
+    await savePlan();
+    renderGrid();
+    renderGrocery();
+    closePicker();
+  }
+
+  async function clearSlot(day, slot){
+    if(plan[day]){ delete plan[day][slot]; }
+    await savePlan();
+    renderGrid();
+    renderGrocery();
+  }
+
+  async function clearDay(day){
+    plan[day] = {};
+    await savePlan();
+    renderGrid();
+    renderGrocery();
+  }
+
+  async function clearWeek(){
+    plan = {};
+    await savePlan();
+    renderGrid();
+    renderGrocery();
+    showToast('Week cleared');
+  }
+
+  async function deleteMeal(mealId){
+    library = library.filter(m => m.id !== mealId);
+    await saveLibrary();
+    let changed = false;
+    Object.keys(plan).forEach(day => {
+      SLOTS.forEach(slot => {
+        if(plan[day] && plan[day][slot] === mealId){ delete plan[day][slot]; changed = true; }
+      });
+    });
+    if(changed) await savePlan();
+    if(activeSlot) renderMealList(activeSlot.slot);
+    renderGrid();
+    renderGrocery();
+  }
+
+  // ---- Event wiring ----
+  weekGrid.addEventListener('click', (e) => {
+    const clearDayBtn = e.target.closest('.clear-day');
+    if(clearDayBtn){
+      clearDay(Number(clearDayBtn.dataset.day));
+      return;
+    }
+    const xBtn = e.target.closest('[data-clear]');
+    const slotBtn = e.target.closest('.slot-btn');
+    if(!slotBtn) return;
+    const day = Number(slotBtn.dataset.day);
+    const slot = slotBtn.dataset.slot;
+    if(xBtn){
+      clearSlot(day, slot);
+      return;
+    }
+    openPicker(day, slot);
+  });
+
+  mealListArea.addEventListener('click', (e) => {
+    const assignBtn = e.target.closest('.assign');
+    if(assignBtn){ assignMeal(assignBtn.dataset.id); return; }
+    const delBtn = e.target.closest('.del-meal');
+    if(delBtn){
+      if(confirm('Remove this meal from your library? It will be cleared from any planned slots.')){
+        deleteMeal(delBtn.dataset.id);
+      }
+    }
+  });
+
+  document.getElementById('pickerCloseBtn').addEventListener('click', closePicker);
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) closePicker(); });
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !overlay.classList.contains('hidden')) closePicker(); });
+
+  document.getElementById('newMealForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('mealNameInput').value.trim();
+    const tag = document.getElementById('mealTagInput').value;
+    const ingRaw = document.getElementById('mealIngInput').value.trim();
+    if(!name) return;
+    const ingredients = ingRaw ? ingRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const id = 'm' + Date.now();
+    library.push({id, name, tag, ingredients});
+    await saveLibrary();
+    await assignMeal(id);
+    showToast('Added "' + name + '"');
+  });
+
+  groceryListEl.addEventListener('change', async (e) => {
+    const cb = e.target.closest('input[type=checkbox]');
+    if(!cb) return;
+    checks[cb.dataset.key] = cb.checked;
+    await saveChecks();
+    cb.closest('li').classList.toggle('checked', cb.checked);
+  });
+
+  document.getElementById('copyListBtn').addEventListener('click', async () => {
+    const items = compileGrocery();
+    const text = items.map(i => '- ' + i.display + (i.count>1 ? ' (x'+i.count+')' : '')).join('\n');
+    try{
+      await navigator.clipboard.writeText(text || 'No items yet.');
+      showToast('List copied');
+    }catch(e){
+      showToast('Copy not available here');
+    }
+  });
+
+  document.getElementById('clearChecksBtn').addEventListener('click', async () => {
+    checks = {};
+    await saveChecks();
+    renderGrocery();
+  });
+
+  document.getElementById('prevWeek').addEventListener('click', async () => {
+    weekStart.setDate(weekStart.getDate() - 7);
+    await loadWeekData();
+    renderAll();
+  });
+  document.getElementById('nextWeek').addEventListener('click', async () => {
+    weekStart.setDate(weekStart.getDate() + 7);
+    await loadWeekData();
+    renderAll();
+  });
+  document.getElementById('todayBtn').addEventListener('click', async () => {
+    weekStart = getMonday(new Date());
+    await loadWeekData();
+    renderAll();
+  });
+  document.getElementById('clearWeekBtn').addEventListener('click', () => {
+    if(confirm('Clear every meal planned for this week?')) clearWeek();
+  });
+
+  // ---- Init ----
+  (async function init(){
+    await loadLibrary();
+    await loadWeekData();
+    renderAll();
+  })();
+})();
+</script>
+</body>
+</html>
