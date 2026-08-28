@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn HTML, CSS & JavaScript Drum Machine</title>
+
+  <style>
+    /* =========================
+       CSS = HOW THE PAGE LOOKS
+       ========================= */
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: white;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .lesson {
+      background: #1f2937;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+    }
+
+    .drum-machine {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin: 30px 0;
+    }
+
+    .drum-pad {
+      background: #374151;
+      border: 2px solid #6b7280;
+      color: white;
+
+      padding: 35px 10px;
+
+      font-size: 20px;
+      font-weight: bold;
+
+      border-radius: 12px;
+
+      cursor: pointer;
+    }
+
+    .drum-pad:hover {
+      background: #4b5563;
+    }
+
+    .drum-pad.active {
+      background: #22c55e;
+      transform: scale(0.95);
+    }
+
+    #display {
+      text-align: center;
+      font-size: 24px;
+      margin-top: 20px;
+    }
+
+    code {
+      background: #111827;
+      padding: 3px 6px;
+      border-radius: 5px;
+    }
+
+    pre {
+      background: #111827;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    @media (max-width: 600px) {
+      .drum-machine {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <!-- =========================
+       HTML = PAGE STRUCTURE
+       ========================= -->
+
+  <div class="container">
+
+    <h1>🥁 My Drum Machine</h1>
+
+    <div class="lesson">
+
+      <h2>1. HTML creates the structure</h2>
+
+      <p>
+        These drum pads are just HTML
+        <code>&lt;button&gt;</code> elements.
+      </p>
+
+      <pre>
+&lt;button class="drum-pad"&gt;
+    Kick
+&lt;/button&gt;
+      </pre>
+
+    </div>
+
+
+    <!-- DRUM MACHINE -->
+
+    <div class="drum-machine">
+
+      <button
+        class="drum-pad"
+        data-sound="kick"
+        data-key="a"
+      >
+        Kick
+        <br>
+        A
+      </button>
+
+
+      <button
+        class="drum-pad"
+        data-sound="snare"
+        data-key="s"
+      >
+        Snare
+        <br>
+        S
+      </button>
+
+
+      <button
+        class="drum-pad"
+        data-sound="hihat"
+        data-key="d"
+      >
+        Hi-Hat
+        <br>
+        D
+      </button>
+
+
+      <button
+        class="drum-pad"
+        data-sound="clap"
+        data-key="f"
+      >
+        Clap
+        <br>
+        F
+      </button>
+
+    </div>
+
+
+    <div id="display">
+      Play a drum
+    </div>
+
+
+    <div class="lesson">
+
+      <h2>2. CSS controls appearance</h2>
+
+      <p>
+        CSS finds elements using selectors.
+      </p>
+
+      <pre>
+.drum-pad {
+    background: gray;
+    padding: 35px;
+    border-radius: 12px;
+}
+      </pre>
+
+      <p>
+        The dot means:
+      </p>
+
+      <pre>
+.drum-pad
+      </pre>
+
+      <p>
+        Find every HTML element whose
+        <code>class="drum-pad"</code>.
+      </p>
+
+    </div>
+
+
+    <div class="lesson">
+
+      <h2>3. JavaScript makes it interactive</h2>
+
+      <p>
+        JavaScript listens for something to happen.
+      </p>
+
+      <pre>
+button.addEventListener("click", function () {
+
+    playDrum();
+
+});
+      </pre>
+
+      <p>
+        This means:
+      </p>
+
+      <p>
+        <strong>
+          When the user clicks this button,
+          run some JavaScript.
+        </strong>
+      </p>
+
+    </div>
+
+
+    <div class="lesson">
+
+      <h2>Try it</h2>
+
+      <p>
+        Click the pads or press:
+      </p>
+
+      <p>
+        <strong>A</strong> = Kick
+        &nbsp;
+        <strong>S</strong> = Snare
+        &nbsp;
+        <strong>D</strong> = Hi-Hat
+        &nbsp;
+        <strong>F</strong> = Clap
+      </p>
+
+    </div>
+
+  </div>
+
+
+
+  <script>
+
+    /* ===============================
+       JAVASCRIPT = PAGE BEHAVIOR
+       =============================== */
+
+
+    /*
+      STEP 1
+
+      document.querySelectorAll()
+      searches our HTML page.
+
+      We are asking JavaScript:
+
+      "Find every element with the
+      class drum-pad."
+    */
+
+    const drumPads =
+      document.querySelectorAll(".drum-pad");
+
+
+    /*
+      Find our display.
+
+      HTML:
+
+      <div id="display">
+
+      JavaScript uses # for an ID.
+    */
+
+    const display =
+      document.querySelector("#display");
+
+
+
+    /*
+      WEB AUDIO
+
+      Browsers have a built-in sound system
+      called the Web Audio API.
+
+      We create an AudioContext.
+    */
+
+    let audioContext;
+
+
+
+    function getAudioContext() {
+
+      if (!audioContext) {
+
+        audioContext =
+          new AudioContext();
+
+      }
+
+      return audioContext;
+
+    }
+
+
+
+    /*
+      ===============================
+      KICK DRUM
+      ===============================
+    */
+
+    function playKick() {
+
+      const audio =
+        getAudioContext();
+
+
+      /*
+        Oscillator = electronic tone
+      */
+
+      const oscillator =
+        audio.createOscillator();
+
+
+      /*
+        Gain = volume
+      */
+
+      const gain =
+        audio.createGain();
+
+
+
+      oscillator.connect(gain);
+
+      gain.connect(audio.destination);
+
+
+
+      /*
+        Start kick at a low frequency
+        and quickly drop lower.
+
+        This produces a BOOM sound.
+      */
+
+      oscillator.frequency.setValueAtTime(
+        150,
+        audio.currentTime
+      );
+
+
+      oscillator.frequency.exponentialRampToValueAtTime(
+        40,
+        audio.currentTime + 0.2
+      );
+
+
+
+      gain.gain.setValueAtTime(
+        1,
+        audio.currentTime
+      );
+
+
+      gain.gain.exponentialRampToValueAtTime(
+        0.01,
+        audio.currentTime + 0.2
+      );
+
+
+      oscillator.start();
+
+      oscillator.stop(
+        audio.currentTime + 0.2
+      );
+
+    }
+
+
+
+    /*
+      ===============================
+      NOISE GENERATOR
+      ===============================
+
+      Snare drums, hi-hats and claps
+      contain lots of noise.
+
+      We generate random audio samples.
+    */
+
+    function createNoise(duration) {
+
+      const audio =
+        getAudioContext();
+
+
+      const bufferSize =
+        audio.sampleRate * duration;
+
+
+      const buffer =
+        audio.createBuffer(
+          1,
+          bufferSize,
+          audio.sampleRate
+        );
+
+
+      const data =
+        buffer.getChannelData(0);
+
+
+
+      for (
+        let i = 0;
+        i < bufferSize;
+        i++
+      ) {
+
+        data[i] =
+          Math.random() * 2 - 1;
+
+      }
+
+
+
+      const source =
+        audio.createBufferSource();
+
+
+      source.buffer =
+        buffer;
+
+
+      return source;
+
+    }
+
+
+
+    /*
+      ===============================
+      SNARE
+      ===============================
+    */
+
+    function playSnare() {
+
+      const audio =
+        getAudioContext();
+
+
+      const noise =
+        createNoise(0.2);
+
+
+      const gain =
+        audio.createGain();
+
+
+      noise.connect(gain);
+
+      gain.connect(audio.destination);
+
+
+
+      gain.gain.setValueAtTime(
+        0.7,
+        audio.currentTime
+      );
+
+
+      gain.gain.exponentialRampToValueAtTime(
+        0.01,
+        audio.currentTime + 0.2
+      );
+
+
+      noise.start();
+
+    }
+
+
+
+    /*
+      ===============================
+      HI-HAT
+      ===============================
+    */
+
+    function playHiHat() {
+
+      const audio =
+        getAudioContext();
+
+
+      const noise =
+        createNoise(0.05);
+
+
+      const filter =
+        audio.createBiquadFilter();
+
+
+      const gain =
+        audio.createGain();
+
+
+
+      /*
+        High-pass filter removes
+        low frequencies.
+      */
+
+      filter.type =
+        "highpass";
+
+
+      filter.frequency.value =
+        7000;
+
+
+
+      noise.connect(filter);
+
+      filter.connect(gain);
+
+      gain.connect(audio.destination);
+
+
+
+      gain.gain.setValueAtTime(
+        0.4,
+        audio.currentTime
+      );
+
+
+      gain.gain.exponentialRampToValueAtTime(
+        0.01,
+        audio.currentTime + 0.05
+      );
+
+
+      noise.start();
+
+    }
+
+
+
+    /*
+      ===============================
+      CLAP
+      ===============================
+    */
+
+    function playClap() {
+
+      const audio =
+        getAudioContext();
+
+
+      /*
+        Make several tiny noise bursts.
+      */
+
+      for (
+        let i = 0;
+        i < 3;
+        i++
+      ) {
+
+        const noise =
+          createNoise(0.08);
+
+
+        const gain =
+          audio.createGain();
+
+
+        noise.connect(gain);
+
+        gain.connect(audio.destination);
+
+
+
+        const start =
+          audio.currentTime +
+          i * 0.03;
+
+
+
+        gain.gain.setValueAtTime(
+          0.5,
+          start
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.01,
+          start + 0.08
+        );
+
+
+        noise.start(start);
+
+      }
+
+    }
+
+
+
+    /*
+      ===============================
+      PLAY DRUM
+      ===============================
+
+      This function decides which
+      drum function to run.
+    */
+
+    function playDrum(sound) {
+
+      if (sound === "kick") {
+
+        playKick();
+
+      }
+
+
+      if (sound === "snare") {
+
+        playSnare();
+
+      }
+
+
+      if (sound === "hihat") {
+
+        playHiHat();
+
+      }
+
+
+      if (sound === "clap") {
+
+        playClap();
+
+      }
+
+
+
+      display.textContent =
+        "You played: " + sound;
+
+    }
+
+
+
+    /*
+      ===============================
+      CLICK EVENTS
+      ===============================
+
+      forEach means:
+
+      "Do this for every drum pad."
+    */
+
+    drumPads.forEach(function (pad) {
+
+
+      pad.addEventListener(
+        "click",
+        function () {
+
+
+          /*
+            dataset.sound reads:
+
+            data-sound="kick"
+
+            from our HTML.
+          */
+
+          const sound =
+            pad.dataset.sound;
+
+
+
+          playDrum(sound);
+
+
+
+          /*
+            Add CSS class:
+
+            .active
+
+            This changes the pad color.
+          */
+
+          pad.classList.add(
+            "active"
+          );
+
+
+
+          /*
+            Remove the class
+            after 100 milliseconds.
+          */
+
+          setTimeout(
+            function () {
+
+              pad.classList.remove(
+                "active"
+              );
+
+            },
+            100
+          );
+
+
+        }
+      );
+
+
+    });
+
+
+
+    /*
+      ===============================
+      KEYBOARD EVENTS
+      ===============================
+    */
+
+    document.addEventListener(
+      "keydown",
+      function (event) {
+
+
+        /*
+          event.key tells us
+          which keyboard key
+          was pressed.
+        */
+
+        const pressedKey =
+          event.key.toLowerCase();
+
+
+
+        drumPads.forEach(
+          function (pad) {
+
+
+            if (
+              pad.dataset.key ===
+              pressedKey
+            ) {
+
+
+              playDrum(
+                pad.dataset.sound
+              );
+
+
+              pad.classList.add(
+                "active"
+              );
+
+
+              setTimeout(
+                function () {
+
+                  pad.classList.remove(
+                    "active"
+                  );
+
+                },
+                100
+              );
+
+
+            }
+
+          }
+        );
+
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
