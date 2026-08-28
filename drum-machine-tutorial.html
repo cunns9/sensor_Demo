@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build a Drum Machine — an interactive lesson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --chassis: #1c1a17;
+    --chassis-panel: #242019;
+    --chassis-inset: #17140f;
+    --cream: #e8e1d3;
+    --amber: #ff9f1a;
+    --amber-dim: #6b4a1a;
+    --teal: #35a394;
+    --red: #e6483f;
+    --ink: #efe9dc;
+    --ink-dim: #a89e8d;
+    --mono: 'Space Mono', 'Courier New', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    background: #0f0d0b;
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+  }
+
+  a{ color: var(--amber); }
+
+  .rack{
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 16px 80px;
+  }
+
+  /* ================= HARDWARE UNIT ================= */
+
+  .unit{
+    position: relative;
+    background:
+      repeating-linear-gradient(100deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px),
+      linear-gradient(180deg, var(--chassis), #16140f);
+    border-radius: 14px;
+    padding: 22px 22px 26px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04);
+    border: 1px solid #0a0908;
+  }
+
+  .unit::before, .unit::after,
+  .screw-tl, .screw-tr, .screw-bl, .screw-br{
+    content:"";
+    position:absolute;
+    width:8px; height:8px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #6b655a, #23201a 70%);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .unit::before{ top:10px; left:10px; }
+  .unit::after{ top:10px; right:10px; }
+  .screw-bl{ position:absolute; bottom:10px; left:10px; }
+  .screw-br{ position:absolute; bottom:10px; right:10px; }
+
+  .unit-top{
+    display:flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 4px 14px 20px;
+    border-bottom: 1px dashed rgba(232,225,211,0.14);
+    margin-bottom: 18px;
+  }
+
+  .unit-brand{
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 11px;
+    color: var(--ink-dim);
+  }
+
+  .unit-title{
+    font-family: var(--mono);
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 700;
+    margin: 4px 0 0;
+    color: var(--cream);
+  }
+
+  .unit-title span{ color: var(--amber); }
+
+  .transport{
+    display:flex;
+    align-items:center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .led-readout{
+    font-family: var(--mono);
+    background: var(--chassis-inset);
+    color: var(--amber);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.7), 0 0 10px rgba(255,159,26,0.15);
+    min-width: 108px;
+    text-align:center;
+  }
+
+  #bpm-slider{
+    accent-color: var(--amber);
+    width: 120px;
+  }
+
+  #play-btn{
+    font-family: var(--mono);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    background: var(--chassis-panel);
+    color: var(--ink);
+    border: 1px solid rgba(232,225,211,0.25);
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.05s ease, background 0.2s ease;
+  }
+  #play-btn:hover{ background:#2c271f; }
+  #play-btn:active{ transform: translateY(1px); }
+  #play-btn.active{
+    background: var(--red);
+    color: #1c0a08;
+    border-color: transparent;
+  }
+
+  button:focus-visible{
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+
+  .hint{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-dim);
+    padding: 0 14px 14px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---- sequencer grid ---- */
+
+  .tracks{
+    overflow-x: auto;
+    padding: 4px 14px 10px;
+  }
+
+  .track-row{
+    display:grid;
+    grid-template-columns: 92px repeat(16, minmax(22px, 1fr));
+    gap: 6px;
+    align-items:center;
+    padding: 6px 0;
+    border-radius: 8px;
+    transition: box-shadow 0.4s ease, background 0.4s ease;
+  }
+
+  .track-row.glow{
+    background: rgba(255,159,26,0.08);
+    box-shadow: 0 0 0 1px rgba(255,159,26,0.4), 0 0 22px rgba(255,159,26,0.25);
+  }
+
+  .track-label{
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--ink-dim);
+    cursor: pointer;
+    padding: 6px 4px;
+    border-right: 1px solid rgba(232,225,211,0.1);
+  }
+  .track-label:hover{ color: var(--cream); }
+
+  .step{
+    aspect-ratio: 1;
+    min-width: 22px;
+    border-radius: 50%;
+    border: 1px solid rgba(232,225,211,0.18);
+    background: var(--chassis-inset);
+    cursor: pointer;
+    padding: 0;
+    position: relative;
+  }
+
+  .step.beat-start{ border-color: rgba(232,225,211,0.4); }
+
+  .step.active{
+    background: var(--amber-dim);
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+  }
+
+  .step.active::after{
+    content:"";
+    position:absolute; inset: 3px;
+    border-radius:50%;
+    background: var(--amber);
+  }
+
+  .step.playing{
+    box-shadow: 0 0 0 2px var(--teal), 0 0 12px rgba(53,163,148,0.7);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .step, .track-row{ transition: none; }
+  }
+
+  /* ================= TUTORIAL ================= */
+
+  .tutorial{
+    margin-top: 44px;
+  }
+
+  .tutorial-intro{
+    font-family: var(--sans);
+    color: var(--ink-dim);
+    max-width: 62ch;
+    margin: 0 0 30px;
+  }
+
+  .module{
+    background: var(--chassis-panel);
+    border: 1px solid rgba(232,225,211,0.08);
+    border-radius: 12px;
+    padding: 22px 24px 26px;
+    margin-bottom: 20px;
+  }
+
+  .module-eyebrow{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 6px;
+  }
+
+  .module h2{
+    font-family: var(--mono);
+    font-size: 19px;
+    margin: 0 0 12px;
+    color: var(--cream);
+  }
+
+  .module p{
+    color: var(--ink);
+    max-width: 68ch;
+    margin: 0 0 12px;
+    font-size: 15px;
+  }
+
+  .module p.aside{
+    color: var(--ink-dim);
+    font-size: 13.5px;
+    border-left: 2px solid var(--amber-dim);
+    padding-left: 12px;
+  }
+
+  pre{
+    background: var(--chassis-inset);
+    border-radius: 8px;
+    padding: 0;
+    overflow-x: auto;
+    margin: 14px 0;
+    border: 1px solid rgba(232,225,211,0.08);
+  }
+
+  .code-tab{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--ink-dim);
+    letter-spacing: 0.05em;
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(232,225,211,0.08);
+  }
+
+  pre code{
+    display:block;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--ink);
+    white-space: pre;
+  }
+
+  .tok-c{ color: var(--ink-dim); font-style: italic; }
+  .tok-k{ color: var(--teal); }
+  .tok-s{ color: var(--amber); }
+
+  .hear-btn{
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    background: none;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .hear-btn:hover{ background: var(--teal); color: #0a1a17; }
+
+  footer{
+    text-align:center;
+    color: var(--ink-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin-top: 40px;
+  }
+
+  @media (max-width: 560px){
+    .track-row{ grid-template-columns: 66px repeat(16, minmax(18px,1fr)); gap:4px; }
+    .track-label{ font-size: 9.5px; }
+    .unit-top{ flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rack">
+
+  <header class="unit" id="machine">
+    <div class="screw-tl"></div><div class="screw-tr"></div><div class="screw-bl"></div><div class="screw-br"></div>
+
+    <div class="unit-top">
+      <div>
+        <p class="unit-brand">Model TT&#8209;16 &middot; Step Sequencer</p>
+        <h1 class="unit-title">Drum <span>Machine</span></h1>
+      </div>
+      <div class="transport">
+        <button id="play-btn">&#9654; Play</button>
+        <div class="led-readout" id="bpm-readout-wrap">BPM <span id="bpm-readout">120</span></div>
+        <input type="range" id="bpm-slider" min="60" max="180" value="120">
+      </div>
+    </div>
+
+    <p class="hint">Tap a circle to toggle a beat. Tap a track name to preview that sound. Press Play — your browser needs one click before it's allowed to make sound.</p>
+
+    <div class="tracks" id="sequencer"></div>
+  </header>
+
+  <main class="tutorial">
+    <p class="tutorial-intro">The machine above is fully real — every sound, every timing decision, every button is built from the code below. Play with it first, then come back down here and we'll take it apart, piece by piece, in the order it was actually built.</p>
+
+    <section class="module">
+      <p class="module-eyebrow">Module 01 &middot; Sound Sources</p>
+      <h2>Making a sound out of thin air</h2>
+      <p>There are no audio files anywhere in this page. Every drum hit is generated on the spot by the <strong>Web Audio API</strong>. Think of an <code>OscillatorNode</code> like a guitar string that, once plucked, keeps vibrating forever until something damps it. A <code>GainNode</code> is your hand landing on that string — it's just a volume knob you can automate over time.</p>
+      <p>A kick drum is a sine wave whose pitch drops fast (150Hz down to 40Hz) while its volume fades to near-silence in about a third of a second. That falling pitch is what makes it feel like a "thump" instead of a musical note.</p>
+      <pre><code><span class="tok-c">// one kick drum, scheduled to play at an exact time</span>
+<span class="tok-k">function</span> playKick(time) {
+  <span class="tok-k">const</span> osc = ctx.createOscillator();
+  <span class="tok-k">const</span> gain = ctx.createGain();
+  osc.frequency.setValueAtTime(<span class="tok-s">150</span>, time);
+  osc.frequency.exponentialRampToValueAtTime(<span class="tok-s">40</span>, time + <span class="tok-s">0.15</span>);
+  gain.gain.setValueAtTime(<span class="tok-s">1</span>, time);
+  gain.gain.exponentialRampToValueAtTime(<span class="tok-s">0.001</span>, time + <span class="tok-s">0.3</span>);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(time);
+  osc.stop(time + <span class="tok-s">0.3</span>);
+}</code></pre>
+      <p class="aside">Snare, hi-hat, and clap use the same idea, but built from noise instead of a pure tone — random static run through a filter, which is exactly what a snare's rattling wires sound like.</p>
+      <button class="hear-btn" data-hear="kick">&#9835; Hear the kick</button>
+    </section>
+
+    <section class="module">
+      <p class="module-eyebrow">Module 02 &middot; State</p>
+      <h2>The grid is just a checklist</h2>
+      <p>Underneath those 64 little circles is nothing fancier than four rows of true/false values — sixteen slots per row, like an ice cube tray that's either filled or empty in each compartment. The machine doesn't know what a "pattern" looks like. It only knows this:</p>
+      <pre><code><span class="tok-k">const</span> pattern = {
+  kick:  [<span class="tok-s">true</span>, <span class="tok-s">false</span>, <span class="tok-s">false</span>, <span class="tok-s">false</span>, <span class="tok-c">/* ...16 total */</span>],
+  snare: [<span class="tok-s">false</span>, <span class="tok-s">false</span>, <span class="tok-s">false</span>, <span class="tok-s">false</span>, <span class="tok-c">/* ... */</span>],
+  hihat: [<span class="tok-s">true</span>, <span class="tok-s">false</span>, <span class="tok-s">true</span>,  <span class="tok-s">false</span>, <span class="tok-c">/* ... */</span>],
+  clap:  [<span class="tok-s">false</span>, <span class="tok-s">false</span>, <span class="tok-s">false</span>, <span class="tok-s">false</span>, <span class="tok-c">/* ... */</span>],
+};</code></pre>
+      <p>Clicking a circle just flips one array value and toggles a CSS class so it lights up. Everything about "what the beat sounds like" lives in this one plain object — the audio code below never has to know it exists as a grid at all.</p>
+      <button class="hear-btn" data-hear="hihat">&#9835; Hear the hi-hat</button>
+    </section>
+
+    <section class="module">
+      <p class="module-eyebrow">Module 03 &middot; Timing</p>
+      <h2>Why you can't just use setInterval</h2>
+      <p>The obvious idea: call <code>setInterval</code> every "beat," and play a sound each time it fires. The problem is that JavaScript timers are more like a distracted friend keeping a beat by ear than a metronome — the browser can pause them for a few milliseconds whenever it's busy with something else, and a few milliseconds of drift per beat turns into an obviously wobbly rhythm within seconds.</p>
+      <p>The fix — the same one real drum machine software has used for years — is to stop trying to make the *timer* precise, and instead use it only as a reminder to plan ahead. Every 25 milliseconds, the scheduler looks at the actual audio clock (which <em>is</em> sample-accurate) and asks: "which notes fall in the next tenth of a second?" It schedules those notes for their exact future moment, then goes back to sleep.</p>
+      <pre><code><span class="tok-c">// runs every 25ms, but schedules notes with sample-accurate timing</span>
+<span class="tok-k">function</span> scheduler() {
+  <span class="tok-k">while</span> (nextNoteTime &lt; ctx.currentTime + <span class="tok-s">0.1</span>) {
+    scheduleStep(currentStep, nextNoteTime); <span class="tok-c">// exact time, not "now"</span>
+    <span class="tok-k">const</span> secondsPerBeat = <span class="tok-s">60</span> / bpm;
+    nextNoteTime += <span class="tok-s">0.25</span> * secondsPerBeat; <span class="tok-c">// advance one 16th note</span>
+    currentStep = (currentStep + <span class="tok-s">1</span>) % <span class="tok-s">16</span>;
+  }
+  setTimeout(scheduler, <span class="tok-s">25</span>);
+}</code></pre>
+      <p class="aside">Analogy: instead of reacting the instant a beat is due, this hands the audio engine a written schedule slightly ahead of time — "play this at exactly 1.375 seconds" — so it never has to guess.</p>
+    </section>
+
+    <section class="module">
+      <p class="module-eyebrow">Module 04 &middot; Visual Feedback</p>
+      <h2>Watching the beat move</h2>
+      <p>The scheduler above only cares about sound — it happily schedules notes a tenth of a second before you hear them, which is too early for the on-screen playhead to jump ahead too. So drawing the moving highlight is a separate, second loop, running once per animation frame, that waits until each scheduled note's time has actually arrived before lighting up that column.</p>
+      <pre><code><span class="tok-c">// runs on every animation frame — lags the scheduler on purpose</span>
+<span class="tok-k">function</span> drawPlayhead() {
+  <span class="tok-k">while</span> (scheduledSteps.length &amp;&amp; scheduledSteps[<span class="tok-s">0</span>].time &lt; ctx.currentTime) {
+    highlightStep(scheduledSteps.shift().step);
+  }
+  requestAnimationFrame(drawPlayhead);
+}</code></pre>
+      <p class="aside">This split — plan sound early, reveal it visually only when it's truly due — is what keeps the glowing step lined up with what you actually hear, instead of visibly running ahead of the beat.</p>
+    </section>
+
+    <section class="module">
+      <p class="module-eyebrow">Module 05 &middot; Wiring It Up</p>
+      <h2>Turning clicks into a working machine</h2>
+      <p>The rest is plumbing: a click on a circle flips that step's boolean and toggles a class; the tempo slider just updates the <code>bpm</code> variable the scheduler already reads; Play builds the audio context and starts the scheduler loop, Stop clears it.</p>
+      <p>One catch every browser enforces: an <code>AudioContext</code> can't make sound until the page has felt at least one real click or tap. That's a deliberate anti-annoyance rule — like a jukebox that won't play until someone puts a coin in, so no page can start blaring audio the moment it loads.</p>
+      <pre><code><span class="tok-k">function</span> ensureAudio() {
+  <span class="tok-k">if</span> (!ctx) ctx = <span class="tok-k">new</span> AudioContext();
+  <span class="tok-k">if</span> (ctx.state === <span class="tok-s">'suspended'</span>) ctx.resume();
+  <span class="tok-k">return</span> ctx;
+}</code></pre>
+      <p>That's the whole instrument. Nothing above is simplified for the page — it's copied straight from the script running the machine at the top. Scroll back up, open your browser's dev tools or view-source, and start changing numbers: stretch the kick's decay to a full second, swap an <code>exponentialRampToValueAtTime</code> for a <code>linearRampToValueAtTime</code> and hear how much duller it sounds, or add a fifth track of your own.</p>
+      <button class="hear-btn" data-hear="clap">&#9835; Hear the clap</button>
+    </section>
+  </main>
+
+  <footer>TT&#8209;16 &middot; built with the Web Audio API &middot; no samples, no libraries</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+  let ctx = null;
+  let cachedNoiseBuffer = null;
+
+  const NUM_STEPS = 16;
+
+  const tracks = [
+    { name: 'Kick',    key: 'kick'  },
+    { name: 'Snare',   key: 'snare' },
+    { name: 'Hi-Hat',  key: 'hihat' },
+    { name: 'Clap',    key: 'clap'  }
+  ];
+
+  const pattern = {
+    kick:  new Array(NUM_STEPS).fill(false),
+    snare: new Array(NUM_STEPS).fill(false),
+    hihat: new Array(NUM_STEPS).fill(false),
+    clap:  new Array(NUM_STEPS).fill(false)
+  };
+
+  // a friendly default groove so the machine isn't silent on first press
+  [0, 4, 8, 12].forEach(i => pattern.kick[i] = true);
+  [4, 12].forEach(i => pattern.snare[i] = true);
+  for (let i = 0; i < NUM_STEPS; i += 2) pattern.hihat[i] = true;
+  [14].forEach(i => pattern.clap[i] = true);
+
+  function ensureAudio(){
+    if (!ctx) ctx = new AudioCtxClass();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  function getNoiseBuffer(audioCtx){
+    if (cachedNoiseBuffer) return cachedNoiseBuffer;
+    const bufferSize = audioCtx.sampleRate * 1;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    cachedNoiseBuffer = buffer;
+    return buffer;
+  }
+
+  function playKick(time){
+    const audioCtx = ensureAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, time);
+    osc.frequency.exponentialRampToValueAtTime(40, time + 0.15);
+    gain.gain.setValueAtTime(1, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(time);
+    osc.stop(time + 0.3);
+  }
+
+  function playSnare(time){
+    const audioCtx = ensureAudio();
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = getNoiseBuffer(audioCtx);
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = 'highpass';
+    noiseFilter.frequency.value = 1000;
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(1, time);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+    noise.connect(noiseFilter).connect(noiseGain).connect(audioCtx.destination);
+    noise.start(time);
+    noise.stop(time + 0.2);
+
+    const osc = audioCtx.createOscillator();
+    const oscGain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = 180;
+    oscGain.gain.setValueAtTime(0.7, time);
+    oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.13);
+    osc.connect(oscGain).connect(audioCtx.destination);
+    osc.start(time);
+    osc.stop(time + 0.13);
+  }
+
+  function playHihat(time){
+    const audioCtx = ensureAudio();
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = getNoiseBuffer(audioCtx);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 7000;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.5, time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+    noise.connect(filter).connect(gain).connect(audioCtx.destination);
+    noise.start(time);
+    noise.stop(time + 0.05);
+  }
+
+  function playClap(time){
+    const audioCtx = ensureAudio();
+    [0, 0.02, 0.04].forEach(offset => {
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = getNoiseBuffer(audioCtx);
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1200;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.6, time + offset);
+      gain.gain.exponentialRampToValueAtTime(0.01, time + offset + 0.1);
+      noise.connect(filter).connect(gain).connect(audioCtx.destination);
+      noise.start(time + offset);
+      noise.stop(time + offset + 0.1);
+    });
+  }
+
+  const players = { kick: playKick, snare: playSnare, hihat: playHihat, clap: playClap };
+
+  // ---------------- build the UI ----------------
+
+  const sequencerEl = document.getElementById('sequencer');
+
+  tracks.forEach(track => {
+    const row = document.createElement('div');
+    row.className = 'track-row';
+    row.dataset.track = track.key;
+
+    const label = document.createElement('button');
+    label.type = 'button';
+    label.className = 'track-label';
+    label.textContent = track.name;
+    label.title = 'Preview this sound';
+    label.addEventListener('click', () => players[track.key](ensureAudio().currentTime));
+    row.appendChild(label);
+
+    const stepsWrap = document.createElement('div');
+    stepsWrap.className = 'steps';
+    stepsWrap.style.display = 'contents';
+
+    for (let i = 0; i < NUM_STEPS; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'step' + (pattern[track.key][i] ? ' active' : '') + (i % 4 === 0 ? ' beat-start' : '');
+      btn.dataset.track = track.key;
+      btn.dataset.step = String(i);
+      btn.setAttribute('aria-label', track.name + ' step ' + (i + 1));
+      btn.addEventListener('click', () => {
+        pattern[track.key][i] = !pattern[track.key][i];
+        btn.classList.toggle('active');
+      });
+      stepsWrap.appendChild(btn);
+    }
+    row.appendChild(stepsWrap);
+    sequencerEl.appendChild(row);
+  });
+
+  // ---------------- transport & scheduler ----------------
+
+  let bpm = 120;
+  let isPlaying = false;
+  let currentStep = 0;
+  let nextNoteTime = 0;
+  let timerId = null;
+  let lastDrawStep = -1;
+  const scheduledSteps = [];
+
+  const lookahead = 25;        // ms, how often we check
+  const scheduleAheadTime = 0.1; // seconds, how far ahead we schedule
+
+  function scheduleStep(step, time){
+    tracks.forEach(t => {
+      if (pattern[t.key][step]) players[t.key](time);
+    });
+    scheduledSteps.push({ step, time });
+  }
+
+  function nextNote(){
+    const secondsPerBeat = 60.0 / bpm;
+    nextNoteTime += 0.25 * secondsPerBeat; // 16th notes
+    currentStep = (currentStep + 1) % NUM_STEPS;
+  }
+
+  function scheduler(){
+    const audioCtx = ensureAudio();
+    while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+      scheduleStep(currentStep, nextNoteTime);
+      nextNote();
+    }
+    timerId = setTimeout(scheduler, lookahead);
+  }
+
+  function highlightStep(step){
+    document.querySelectorAll('.step').forEach(el => {
+      el.classList.toggle('playing', Number(el.dataset.step) === step);
+    });
+  }
+
+  function clearPlayheadUI(){
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('playing'));
+    lastDrawStep = -1;
+  }
+
+  function drawPlayhead(){
+    const audioCtx = ensureAudio();
+    while (scheduledSteps.length && scheduledSteps[0].time < audioCtx.currentTime) {
+      lastDrawStep = scheduledSteps.shift().step;
+      highlightStep(lastDrawStep);
+    }
+    if (isPlaying) requestAnimationFrame(drawPlayhead);
+  }
+
+  function play(){
+    if (isPlaying) return;
+    const audioCtx = ensureAudio();
+    isPlaying = true;
+    currentStep = 0;
+    nextNoteTime = audioCtx.currentTime + 0.05;
+    scheduledSteps.length = 0;
+    scheduler();
+    requestAnimationFrame(drawPlayhead);
+  }
+
+  function stop(){
+    isPlaying = false;
+    clearTimeout(timerId);
+    scheduledSteps.length = 0;
+    clearPlayheadUI();
+  }
+
+  const playBtn = document.getElementById('play-btn');
+  playBtn.addEventListener('click', () => {
+    if (isPlaying) {
+      stop();
+      playBtn.innerHTML = '&#9654; Play';
+      playBtn.classList.remove('active');
+    } else {
+      play();
+      playBtn.innerHTML = '&#9632; Stop';
+      playBtn.classList.add('active');
+    }
+  });
+
+  const bpmSlider = document.getElementById('bpm-slider');
+  const bpmReadout = document.getElementById('bpm-readout');
+  bpmSlider.addEventListener('input', (e) => {
+    bpm = Number(e.target.value);
+    bpmReadout.textContent = String(bpm);
+  });
+
+  // ---------------- tutorial "hear it" buttons ----------------
+
+  document.querySelectorAll('[data-hear]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.hear;
+      const audioCtx = ensureAudio();
+      players[key](audioCtx.currentTime);
+      const row = document.querySelector('.track-row[data-track="' + key + '"]');
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.classList.add('glow');
+        setTimeout(() => row.classList.remove('glow'), 900);
+      }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
