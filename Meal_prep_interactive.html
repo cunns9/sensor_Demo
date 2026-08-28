@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Meal Prep Trainer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <main class="app" id="mealPrepTrainer">
+
+    <div class="trainer-layout">
+
+      <!-- LEFT SIDE -->
+      <section class="lesson-column">
+
+        <div class="top-row">
+
+          <div>
+            <p class="eyebrow">INTERACTIVE LESSON</p>
+            <h1>Build your first meal-prep system</h1>
+          </div>
+
+          <div class="step-pill">
+            <span id="stepCounter">1</span> / 4
+          </div>
+
+        </div>
+
+        <div class="progress-track">
+          <div
+            id="lessonProgress"
+            class="progress-fill"
+            style="width: 25%">
+          </div>
+        </div>
+
+
+        <!-- LESSON CARD -->
+
+        <div class="lesson-card">
+
+          <p id="lessonEyebrow" class="lesson-eyebrow">
+            Step 1 · Build a meal
+          </p>
+
+          <h2 id="lessonTitle">
+            Choose one item from each group
+          </h2>
+
+          <p id="lessonText" class="lesson-description">
+            Meal prep becomes easier when you stop thinking in recipes
+            and start thinking in reusable components.
+          </p>
+
+
+          <!-- MEAL BUILDER -->
+
+          <div id="builderArea" class="builder-grid">
+
+            <!-- PROTEIN -->
+
+            <fieldset>
+
+              <legend>Protein</legend>
+
+              <div class="choice-grid" data-group="protein">
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Chicken">
+                  Chicken
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Salmon">
+                  Salmon
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Turkey">
+                  Turkey
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Beans">
+                  Beans
+                </button>
+
+              </div>
+
+            </fieldset>
+
+
+            <!-- VEGETABLE -->
+
+            <fieldset>
+
+              <legend>Vegetable</legend>
+
+              <div class="choice-grid" data-group="vegetable">
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Broccoli">
+                  Broccoli
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Peppers">
+                  Peppers
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Spinach">
+                  Spinach
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Carrots">
+                  Carrots
+                </button>
+
+              </div>
+
+            </fieldset>
+
+
+            <!-- CARBS -->
+
+            <fieldset>
+
+              <legend>Carb</legend>
+
+              <div class="choice-grid" data-group="carb">
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Rice">
+                  Rice
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Potatoes">
+                  Potatoes
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Quinoa">
+                  Quinoa
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Pasta">
+                  Pasta
+                </button>
+
+              </div>
+
+            </fieldset>
+
+
+            <!-- FLAVOR -->
+
+            <fieldset>
+
+              <legend>Flavor</legend>
+
+              <div class="choice-grid" data-group="flavor">
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Garlic herb">
+                  Garlic herb
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Teriyaki">
+                  Teriyaki
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Salsa">
+                  Salsa
+                </button>
+
+                <button
+                  type="button"
+                  class="choice"
+                  data-value="Lemon pepper">
+                  Lemon pepper
+                </button>
+
+              </div>
+
+            </fieldset>
+
+          </div>
+
+
+          <!-- SCENARIOS -->
+
+          <div
+            id="scenarioArea"
+            class="scenario-area hidden">
+          </div>
+
+
+          <!-- CONTROLS -->
+
+          <div class="button-row">
+
+            <button
+              id="backBtn"
+              type="button"
+              class="secondary-button hidden">
+              Back
+            </button>
+
+            <button
+              id="nextBtn"
+              type="button"
+              class="primary-button"
+              disabled>
+              Check my meal
+            </button>
+
+            <button
+              id="restartBtn"
+              type="button"
+              class="secondary-button restart">
+              Restart
+            </button>
+
+          </div>
+
+
+          <div
+            id="feedback"
+            class="feedback"
+            aria-live="polite">
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- RIGHT SIDE -->
+
+      <aside class="sidebar">
+
+
+        <!-- YOUR MEAL -->
+
+        <div class="sidebar-card meal-card">
+
+          <p class="sidebar-label">YOUR MEAL</p>
+
+          <div id="mealVisual" class="meal-grid">
+
+            <div class="meal-component">
+              <div class="meal-icon">🥩</div>
+              <div id="mealProtein">Protein</div>
+            </div>
+
+            <div class="meal-component">
+              <div class="meal-icon">🥦</div>
+              <div id="mealVegetable">Vegetable</div>
+            </div>
+
+            <div class="meal-component">
+              <div class="meal-icon">🍚</div>
+              <div id="mealCarb">Carb</div>
+            </div>
+
+            <div class="meal-component">
+              <div class="meal-icon">✨</div>
+              <div id="mealFlavor">Flavor</div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SCORE -->
+
+        <div class="sidebar-card">
+
+          <div class="score-header">
+
+            <div>
+              <p class="sidebar-label">
+                PREP SCORE
+              </p>
+
+              <div id="score" class="score">
+                0
+              </div>
+            </div>
+
+            <div id="scoreBadge" class="score-badge">
+              Learning
+            </div>
+
+          </div>
+
+          <p class="sidebar-description">
+            You earn points for making efficient prep decisions,
+            not for choosing a specific food.
+          </p>
+
+        </div>
+
+
+        <!-- LEARNING -->
+
+        <div class="sidebar-card">
+
+          <p class="sidebar-label">
+            WHAT YOU'RE LEARNING
+          </p>
+
+          <ul id="learningList" class="learning-list">
+
+            <li class="complete">
+              ✓ Build meals from components
+            </li>
+
+            <li>
+              ○ Reduce duplicate cooking
+            </li>
+
+            <li>
+              ○ Cook in the right order
+            </li>
+
+            <li>
+              ○ Store food strategically
+            </li>
+
+          </ul>
+
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
