@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f6f4ef" />
+  <title>Articulation Lab</title>
+  <style>
+    :root{
+      --bg:#f6f4ef;--panel:#fff;--ink:#1c1c1a;--muted:#706d66;--line:#ddd8cf;
+      --soft:#efebe4;--accent:#1f5f50;--accent2:#dce9e4;--danger:#a13b32;
+      --good:#2e6f50;--warn:#8a6a2f;--shadow:0 14px 35px rgba(30,30,25,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .shell{max-width:1240px;margin:auto;padding:28px 18px 60px}
+    .topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:22px}
+    h1{margin:0;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:-.055em;line-height:.98}
+    .eyebrow{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:900;margin-bottom:10px}
+    .intro{max-width:700px;color:var(--muted);line-height:1.65;margin:10px 0 0}
+    .stats-chip{background:var(--ink);color:#fff;border-radius:999px;padding:10px 15px;font-size:.88rem;white-space:nowrap}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);min-width:0}
+    .card h2{font-size:1.03rem;margin:0 0 14px;letter-spacing:-.02em}
+    .sub{color:var(--muted);font-size:.88rem;line-height:1.5}
+    .controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    label{display:block;font-size:.77rem;font-weight:800;margin-bottom:7px}
+    select,input,textarea{width:100%;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:13px;padding:12px 13px;outline:none}
+    select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2)}
+    textarea{min-height:112px;resize:vertical;line-height:1.5}
+    .button-row{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+    .btn{border:0;border-radius:999px;padding:11px 15px;font-weight:800;background:var(--accent);color:white}
+    .btn.secondary{background:var(--soft);color:var(--ink)}
+    .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+    .btn.danger{background:var(--danger)}
+    .btn:disabled{opacity:.42;cursor:not-allowed}
+    .prompt-box{margin-top:15px;padding:17px;border-radius:16px;background:#f8f7f3;border:1px solid var(--line)}
+    .prompt-label{font-size:.71rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:900}
+    .prompt-text{font-size:1.15rem;line-height:1.5;margin-top:7px}
+    .prompt-hint{font-size:.81rem;color:var(--muted);margin-top:9px}
+    .video-wrap{position:relative;background:#111;border-radius:18px;overflow:hidden;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center}
+    video{width:100%;height:100%;object-fit:cover;background:#111}
+    .timer{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.68);color:#fff;padding:7px 10px;border-radius:999px;font-variant-numeric:tabular-nums;font-weight:900}
+    .recording::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4b42;margin-right:6px}
+    .status{font-size:.81rem;color:var(--muted);margin-top:10px;min-height:20px}
+    .transcript{margin-top:12px;background:#faf9f6;border:1px solid var(--line);border-radius:15px;padding:14px;min-height:94px;white-space:pre-wrap;line-height:1.55}
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+    .metric{background:#faf9f6;border:1px solid var(--line);border-radius:15px;padding:13px;min-width:0}
+    .metric .k{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+    .metric .v{font-size:1.35rem;font-weight:900;margin-top:5px}
+    .metric .d{font-size:.73rem;color:var(--muted);margin-top:4px}
+    .review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+    .slider{background:#faf9f6;border:1px solid var(--line);border-radius:15px;padding:13px}
+    .slider-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .score{font-weight:900;color:var(--accent)}
+    input[type=range]{padding:0;border:0;box-shadow:none;accent-color:var(--accent)}
+    .full{grid-column:1/-1}
+    .analysis-box{margin-top:14px;padding:15px;border-radius:16px;background:#f8f7f3;border:1px solid var(--line)}
+    .analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+    .flag{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px}
+    .flag strong{display:block;font-size:.83rem}
+    .flag span{display:block;color:var(--muted);font-size:.78rem;margin-top:4px;line-height:1.4}
+    .session-list{display:grid;gap:9px;margin-top:12px}
+    .session{border:1px solid var(--line);border-radius:15px;padding:12px;background:#fff}
+    .session-top{display:flex;justify-content:space-between;gap:10px}
+    .session-title{font-weight:800}
+    .session-meta{font-size:.77rem;color:var(--muted);margin-top:4px}
+    .scores{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .pill{font-size:.71rem;background:var(--soft);padding:5px 8px;border-radius:999px}
+    .compare{margin-top:12px;background:#f8f7f3;border:1px solid var(--line);border-radius:16px;padding:14px;display:none}
+    .compare.show{display:block}
+    .compare-row{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:9px 0}
+    .delta{font-weight:900;color:var(--accent);font-size:.83rem}
+    .chart{margin-top:14px;border:1px solid var(--line);border-radius:16px;padding:14px;background:#faf9f6}
+    .chart svg{width:100%;height:auto;display:block}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin-top:8px}
+    .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:5px}
+    .micro{font-size:.75rem;color:var(--muted)}
+    .footer-note{margin-top:22px;color:var(--muted);font-size:.8rem;text-align:center}
+    @media(max-width:930px){.grid{grid-template-columns:1fr}.topbar{align-items:flex-start;flex-direction:column}}
+    @media(max-width:650px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.analysis-grid,.controls,.review-grid{grid-template-columns:1fr}.full{grid-column:auto}}
+    @media(max-width:420px){.shell{padding:20px 11px 40px}.card{padding:15px}.metrics{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">Articulation Lab</div>
+      <h1>Train the way you speak.</h1>
+      <p class="intro">Generate adaptive prompts, record your response, capture a transcript, measure pacing and filler words, check response structure, and compare your progress over time.</p>
+    </div>
+    <div class="stats-chip" id="sessionCount">0 saved sessions</div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h2>1. Adaptive prompt trainer</h2>
+      <div class="controls">
+        <div>
+          <label for="goal">Practice focus</label>
+          <select id="goal">
+            <option value="conversation">Conversation & small talk</option>
+            <option value="storytelling">Storytelling</option>
+            <option value="professional">Professional speaking</option>
+            <option value="impromptu">Impromptu response</option>
+            <option value="persuasion">Persuasion & opinions</option>
+            <option value="explain">Explain clearly</option>
+          </select>
+        </div>
+        <div>
+          <label for="difficulty">Difficulty</label>
+          <select id="difficulty">
+            <option value="easy">Warm-up</option>
+            <option value="medium" selected>Stretch</option>
+            <option value="hard">Challenge me</option>
+          </select>
+        </div>
+        <div>
+          <label for="duration">Target length</label>
+          <select id="duration">
+            <option value="30">30 seconds</option>
+            <option value="60" selected>1 minute</option>
+            <option value="120">2 minutes</option>
+            <option value="180">3 minutes</option>
+          </select>
+        </div>
+        <div>
+          <label for="tone">Speaking style</label>
+          <select id="tone">
+            <option value="natural">Natural & conversational</option>
+            <option value="concise">Concise & structured</option>
+            <option value="confident">Confident & decisive</option>
+            <option value="warm">Warm & engaging</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="prompt-box">
+        <div class="prompt-label">Current prompt</div>
+        <div class="prompt-text" id="promptText">Tell me about something you recently learned and why it mattered to you.</div>
+        <div class="prompt-hint" id="promptHint">Answer directly, give one supporting detail, then finish cleanly.</div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn" id="generateBtn">New prompt</button>
+        <button class="btn secondary" id="followupBtn">AI-style follow-up</button>
+        <button class="btn ghost" id="harderBtn">Make it harder</button>
+      </div>
+      <p class="micro" style="margin-top:10px">This version uses a local adaptive prompt engine. It behaves like an AI coach without sending your recordings or text to an external service.</p>
+    </div>
+
+    <div class="card">
+      <h2>2. Record + transcribe</h2>
+      <div class="video-wrap">
+        <video id="preview" playsinline muted></video>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+      <div class="button-row">
+        <button class="btn" id="cameraBtn">Enable camera</button>
+        <button class="btn danger" id="recordBtn" disabled>Start recording</button>
+        <button class="btn ghost" id="stopBtn" disabled>Stop</button>
+        <button class="btn secondary" id="downloadBtn" disabled>Save video</button>
+      </div>
+      <div class="status" id="status">Camera and microphone stay in your browser.</div>
+      <div class="transcript" id="transcript">Transcript will appear here when browser speech recognition is available. You can also paste or edit the transcript manually below.</div>
+      <div style="margin-top:10px">
+        <label for="manualTranscript">Transcript editor</label>
+        <textarea id="manualTranscript" placeholder="Your speech transcript will appear here, or paste one manually."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. Automatic speech analysis</h2>
+      <div class="metrics">
+        <div class="metric"><div class="k">Words</div><div class="v" id="wordCount">0</div><div class="d">Total spoken words</div></div>
+        <div class="metric"><div class="k">Pace</div><div class="v" id="wpm">0</div><div class="d">Words per minute</div></div>
+        <div class="metric"><div class="k">Fillers</div><div class="v" id="fillerCount">0</div><div class="d">Um, uh, like, etc.</div></div>
+        <div class="metric"><div class="k">Avg sentence</div><div class="v" id="sentenceLen">0</div><div class="d">Words per sentence</div></div>
+      </div>
+
+      <div class="analysis-box">
+        <div class="prompt-label">Coach analysis</div>
+        <div class="analysis-grid">
+          <div class="flag"><strong id="paceLabel">Pacing</strong><span id="paceNote">Add a transcript and recording duration to analyze pacing.</span></div>
+          <div class="flag"><strong id="fillerLabel">Filler words</strong><span id="fillerNote">Filler tracking will appear here.</span></div>
+          <div class="flag"><strong id="structureLabel">Structure</strong><span id="structureNote">The coach checks for an opening, support, and a conclusion.</span></div>
+          <div class="flag"><strong id="clarityLabel">Clarity</strong><span id="clarityNote">The coach checks sentence length and repeated phrasing.</span></div>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn" id="analyzeBtn">Analyze transcript</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4. Self-review</h2>
+      <div class="review-grid">
+        <div class="slider">
+          <div class="slider-head"><strong>Clarity</strong><span class="score" id="clarityVal">5</span></div>
+          <input type="range" id="clarity" min="1" max="10" value="5">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><strong>Pacing</strong><span class="score" id="pacingVal">5</span></div>
+          <input type="range" id="pacing" min="1" max="10" value="5">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><strong>Confidence</strong><span class="score" id="confidenceVal">5</span></div>
+          <input type="range" id="confidence" min="1" max="10" value="5">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><strong>Structure</strong><span class="score" id="structureVal">5</span></div>
+          <input type="range" id="structure" min="1" max="10" value="5">
+        </div>
+        <div class="full">
+          <label for="notes">What did you notice?</label>
+          <textarea id="notes" placeholder="Example: I rushed my first sentence but slowed down once I reached my example."></textarea>
+        </div>
+        <div class="full">
+          <label for="nextFocus">One focus for the next round</label>
+          <input id="nextFocus" placeholder="Example: Pause one beat before answering.">
+        </div>
+      </div>
+      <div class="button-row">
+        <button class="btn" id="saveSessionBtn">Save session</button>
+        <button class="btn secondary" id="repeatBtn">Repeat same prompt</button>
+        <button class="btn ghost" id="resetScoresBtn">Reset review</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>5. Progress dashboard</h2>
+      <p class="sub">Saved sessions persist in this browser so you can watch your trend over time.</p>
+      <div class="chart">
+        <svg id="trendChart" viewBox="0 0 640 240" role="img" aria-label="Articulation score trend chart"></svg>
+        <div class="legend"><span><span class="dot"></span>Average self-review score</span></div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="k">Best avg</div><div class="v" id="bestAvg">—</div><div class="d">Highest session</div></div>
+        <div class="metric"><div class="k">Avg pace</div><div class="v" id="avgWpm">—</div><div class="d">Across sessions</div></div>
+        <div class="metric"><div class="k">Avg fillers</div><div class="v" id="avgFillers">—</div><div class="d">Per session</div></div>
+        <div class="metric"><div class="k">Practice</div><div class="v" id="practiceTime">—</div><div class="d">Minutes recorded</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>6. Compare sessions</h2>
+      <div class="controls">
+        <div><label for="compareA">Earlier session</label><select id="compareA"><option value="">Choose session</option></select></div>
+        <div><label for="compareB">Later session</label><select id="compareB"><option value="">Choose session</option></select></div>
+      </div>
+      <div class="compare" id="compareBox"></div>
+      <div class="session-list" id="sessionList"><div class="micro">No saved sessions yet.</div></div>
+      <div class="button-row">
+        <button class="btn ghost" id="clearHistoryBtn">Clear saved history</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Best drill: use one prompt twice. First response = baseline. Second response = deliberate correction.</div>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const STORAGE_KEY = "articulationLabSessionsV2";
+
+  const banks = {
+    conversation:{
+      easy:["What is something small that made your week better?","What is one thing you enjoy doing when you have free time?","Describe a meal you enjoy making and why."],
+      medium:["Tell me about something you recently learned and why it mattered to you.","Describe a conversation that made you think differently.","What is one routine that makes your life easier, and how did you develop it?"],
+      hard:["Someone you just met says, “Tell me something interesting about yourself.” Respond naturally without listing your résumé.","Keep a conversation going after someone tells you they had a difficult week. Show curiosity without interrogating them.","Explain a personal preference in a way that invites the other person to share theirs."]
+    },
+    storytelling:{
+      easy:["Tell a short story about a time something unexpectedly worked out.","Describe a memorable moment from your week using a beginning, middle, and end.","Tell a story about learning something for the first time."],
+      medium:["Tell a story about a mistake that taught you something useful. Make the turning point obvious.","Describe a moment when your first impression changed.","Tell a two-minute story in which one small decision had a larger effect."],
+      hard:["Tell a story about a conflict without making yourself or the other person the villain.","Describe a setback in a way that is engaging, specific, and ends with a meaningful takeaway.","Tell a story using one vivid detail, one moment of tension, and one concise reflection."]
+    },
+    professional:{
+      easy:["Introduce yourself professionally in under one minute.","Explain what you are studying or working on to someone outside your field.","Describe one strength you bring to a team and support it with an example."],
+      medium:["Answer: “Tell me about a project you are proud of.” Use situation, action, and result.","Explain a difficult decision you made at work or school and how you approached it.","Give a concise update on a project that is behind schedule without sounding defensive."],
+      hard:["A manager challenges your recommendation in a meeting. Defend your reasoning calmly while remaining open to new evidence.","Pitch an idea in 90 seconds to someone who is skeptical and short on time.","Explain a technical insight to an executive who cares about business impact, not methodology."]
+    },
+    impromptu:{
+      easy:["Would you rather have more time or more money? Explain your answer.","What makes a day feel productive to you?","What is one skill everyone should learn?"],
+      medium:["What is something people often overcomplicate?","Is consistency more important than motivation? Defend your answer.","What is one belief you have changed your mind about?"],
+      hard:["Should convenience ever be sacrificed for quality? Build a balanced argument.","What is the difference between being busy and being effective?","If you could redesign one everyday system, what would you change and why?"]
+    },
+    persuasion:{
+      easy:["Convince someone to try a habit that has helped you.","Persuade a friend to visit a place you enjoy.","Argue for or against keeping notifications turned off."],
+      medium:["Make the case for why recovery time should be scheduled deliberately.","Persuade a skeptical audience that clear communication is a practical career skill.","Argue for one change that would make meetings more useful."],
+      hard:["Take a position, acknowledge the strongest opposing argument, then defend your view.","Persuade someone to change a routine they are emotionally attached to.","Make a recommendation where every available option has a meaningful tradeoff."]
+    },
+    explain:{
+      easy:["Explain a concept you know well as if you were talking to a curious teenager.","Explain how to complete a task you do often without skipping steps.","Define a term from your field without using jargon."],
+      medium:["Explain correlation versus causation using a real-world example.","Explain how a recommendation system works to someone with no technical background.","Explain a process using only three main points and one example."],
+      hard:["Explain a technical concept first to a beginner, then restate it for an expert audience.","Explain a complicated idea without using filler phrases or more than one analogy.","Explain why a metric can be technically correct but still misleading for a business decision."]
+    }
+  };
+
+  const hints = {
+    natural:"Speak as if one person asked you the question. Do not perform.",
+    concise:"Lead with the answer → add 1–2 supporting points → finish cleanly.",
+    confident:"Reduce qualifiers. State your point before explaining it.",
+    warm:"Use one specific detail and leave the listener a natural opening to respond."
+  };
+
+  const followups = [
+    "What makes you say that?","Can you give a specific example?","What happened next?",
+    "What did you learn from that?","What would someone who disagrees with you say?",
+    "Why does that matter?","What would you do differently now?","Can you make that answer more concise?"
+  ];
+
+  const fillers = ["um","uh","erm","like","you know","basically","actually","literally","kind of","sort of","i mean"];
+  let stream=null, recorder=null, chunks=[], blobUrl=null, seconds=0, timerId=null;
+  let recognition=null, recognizing=false, transcriptText="";
+  let sessions = loadSessions();
+
+  function loadSessions(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+    catch { return []; }
+  }
+  function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions)); }
+
+  function rand(a){ return a[Math.floor(Math.random()*a.length)] }
+  function currentPrompt(){ return $("promptText").textContent.replace(/^Follow-up:\s*/,""); }
+
+  function generatePrompt(){
+    const g=$("goal").value,d=$("difficulty").value;
+    $("promptText").textContent=rand(banks[g][d]);
+    $("promptHint").textContent=hints[$("tone").value];
+  }
+
+  $("generateBtn").addEventListener("click", generatePrompt);
+  $("followupBtn").addEventListener("click",()=>{
+    const lead = $("manualTranscript").value.trim();
+    let f = rand(followups);
+    if(lead && lead.split(/\s+/).length < 25) f = "Expand that answer with one concrete example. What happened, specifically?";
+    $("promptText").textContent="Follow-up: "+f;
+    $("promptHint").textContent="Respond directly. Avoid repeating your previous answer.";
+  });
+  $("harderBtn").addEventListener("click",()=>{
+    const d=$("difficulty");
+    d.value=d.value==="easy"?"medium":"hard";
+    generatePrompt();
+  });
+  $("tone").addEventListener("change",()=> $("promptHint").textContent=hints[$("tone").value]);
+
+  $("cameraBtn").addEventListener("click",async()=>{
+    if(!navigator.mediaDevices?.getUserMedia){
+      $("status").textContent="Camera recording is not supported in this browser context.";
+      return;
+    }
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+      $("preview").srcObject=stream;$("preview").controls=false;$("preview").muted=true;
+      await $("preview").play();
+      $("recordBtn").disabled=false;$("cameraBtn").disabled=true;$("cameraBtn").textContent="Camera ready";
+      $("status").textContent="Camera and microphone are ready.";
+    }catch(e){$("status").textContent="Camera/microphone permission was not granted."}
+  });
+
+  function setupRecognition(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR) return false;
+    recognition=new SR();
+    recognition.continuous=true; recognition.interimResults=true; recognition.lang="en-US";
+    recognition.onresult=e=>{
+      let finalChunk="", interim="";
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const text=e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalChunk+=text+" ";
+        else interim+=text;
+      }
+      if(finalChunk) transcriptText += finalChunk;
+      $("transcript").textContent=(transcriptText+interim).trim() || "Listening…";
+      $("manualTranscript").value=(transcriptText+interim).trim();
+    };
+    recognition.onend=()=>{ if(recognizing){ try{recognition.start()}catch{} } };
+    return true;
+  }
+  const recognitionAvailable=setupRecognition();
+
+  function formatTime(s){
+    const m=Math.floor(s/60).toString().padStart(2,"0");
+    const sec=(s%60).toString().padStart(2,"0");
+    return `${m}:${sec}`;
+  }
+
+  $("recordBtn").addEventListener("click",()=>{
+    if(!stream) return;
+    chunks=[]; transcriptText="";
+    const opts=MediaRecorder.isTypeSupported?.("video/webm;codecs=vp9,opus")?{mimeType:"video/webm;codecs=vp9,opus"}:undefined;
+    try{recorder=new MediaRecorder(stream,opts)}catch{recorder=new MediaRecorder(stream)}
+    recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+    recorder.onstop=()=>{
+      const blob=new Blob(chunks,{type:recorder.mimeType||"video/webm"});
+      if(blobUrl)URL.revokeObjectURL(blobUrl);
+      blobUrl=URL.createObjectURL(blob);
+      $("preview").srcObject=null;$("preview").src=blobUrl;$("preview").muted=false;$("preview").controls=true;
+      $("downloadBtn").disabled=false;$("recordBtn").disabled=false;$("stopBtn").disabled=true;
+      $("status").textContent="Recording complete. Analyze the transcript, then review yourself.";
+      analyzeTranscript();
+    };
+    recorder.start(); seconds=0;$("timer").textContent="00:00";$("timer").classList.add("recording");
+    timerId=setInterval(()=>{
+      seconds++;$("timer").textContent=formatTime(seconds);
+      if(seconds===Number($("duration").value))$("status").textContent="Target time reached. Finish your thought cleanly.";
+    },1000);
+    if(recognitionAvailable){
+      recognizing=true; try{recognition.start()}catch{}
+    }else{
+      $("transcript").textContent="Live speech recognition is unavailable in this browser. Record normally, then type or paste a transcript for analysis.";
+    }
+    $("recordBtn").disabled=true;$("stopBtn").disabled=false;$("downloadBtn").disabled=true;
+    $("status").textContent="Recording… focus on your listener, not the camera.";
+  });
+
+  $("stopBtn").addEventListener("click",()=>{
+    if(recorder&&recorder.state!=="inactive")recorder.stop();
+    clearInterval(timerId);$("timer").classList.remove("recording");
+    recognizing=false; if(recognition){try{recognition.stop()}catch{}}
+  });
+
+  $("downloadBtn").addEventListener("click",()=>{
+    if(!blobUrl)return;
+    const a=document.createElement("a");a.href=blobUrl;a.download=`articulation-${new Date().toISOString().slice(0,10)}.webm`;
+    document.body.appendChild(a);a.click();a.remove();
+  });
+
+  function words(text){return (text.toLowerCase().match(/\b[\w’'-]+\b/g)||[])}
+
+  function countFillers(text){
+    let total=0; const low=" "+text.toLowerCase()+" ";
+    fillers.forEach(f=>{
+      const escaped=f.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+      const matches=low.match(new RegExp("\\b"+escaped+"\\b","g"));
+      if(matches) total+=matches.length;
+    });
+    return total;
+  }
+
+  function repeatedPhrases(text){
+    const w=words(text);
+    const counts={};
+    for(let i=0;i<w.length-2;i++){
+      const p=w.slice(i,i+3).join(" ");
+      counts[p]=(counts[p]||0)+1;
+    }
+    return Object.entries(counts).filter(([k,v])=>v>=3).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  }
+
+  function analyzeTranscript(){
+    const text=$("manualTranscript").value.trim();
+    if(!text){
+      $("status").textContent="Add a transcript first, then analyze it.";
+      return;
+    }
+    const wc=words(text).length;
+    const mins=seconds>0?seconds/60:Math.max(wc/130,0.5);
+    const pace=Math.round(wc/mins);
+    const fc=countFillers(text);
+    const sentences=text.split(/[.!?]+/).map(s=>s.trim()).filter(Boolean);
+    const avg=sentences.length?Math.round(wc/sentences.length):wc;
+
+    $("wordCount").textContent=wc;
+    $("wpm").textContent=pace;
+    $("fillerCount").textContent=fc;
+    $("sentenceLen").textContent=avg;
+
+    if(pace<105){$("paceLabel").textContent="Pacing: slow";$("paceNote").textContent="You may be leaving long gaps. Aim for roughly 110–160 WPM for conversational delivery."}
+    else if(pace>175){$("paceLabel").textContent="Pacing: fast";$("paceNote").textContent="You may be rushing. Add deliberate pauses after key points."}
+    else{$("paceLabel").textContent="Pacing: controlled";$("paceNote").textContent="Your estimated pace is within a generally comfortable conversational range."}
+
+    const fillerRate=wc?Math.round((fc/wc)*100):0;
+    if(fc===0){$("fillerLabel").textContent="Filler words: clean";$("fillerNote").textContent="No common filler words detected."}
+    else if(fillerRate<=2){$("fillerLabel").textContent="Filler words: light";$("fillerNote").textContent=`${fc} detected, about ${fillerRate}% of your words.`}
+    else{$("fillerLabel").textContent="Filler words: noticeable";$("fillerNote").textContent=`${fc} detected. Replace fillers with a short silent pause.`}
+
+    const lower=text.toLowerCase();
+    const opening = /^(i think|i believe|my answer|the main|one thing|yes|no|for me|in my view|the reason)/.test(lower);
+    const support = /\b(for example|for instance|because|specifically|one reason|another reason|this happened|such as)\b/.test(lower);
+    const conclusion = /\b(so|overall|ultimately|that is why|because of that|in the end|the takeaway|what i learned)\b/.test(lower);
+    const structureScore=[opening,support,conclusion].filter(Boolean).length;
+    $("structureLabel").textContent=`Structure: ${structureScore}/3 signals`;
+    $("structureNote").textContent=structureScore===3?"Clear answer, support, and ending signals detected.":structureScore===2?"Mostly structured. Strengthen either the opening or conclusion.":"Try a simple frame: answer → example/reason → takeaway.";
+
+    const reps=repeatedPhrases(text);
+    if(avg>28){$("clarityLabel").textContent="Clarity: dense";$("clarityNote").textContent="Your average sentence is long. Break complex thoughts into shorter units."}
+    else if(reps.length){$("clarityLabel").textContent="Clarity: repetitive";$("clarityNote").textContent=`Repeated phrase detected: “${reps[0][0]}”. Tighten repeated ideas.`}
+    else{$("clarityLabel").textContent="Clarity: readable";$("clarityNote").textContent="Sentence length and repetition look reasonably controlled."}
+
+    return {wc,pace,fc,avg,structureScore};
+  }
+  $("analyzeBtn").addEventListener("click",analyzeTranscript);
+  $("manualTranscript").addEventListener("input",()=>{$("transcript").textContent=$("manualTranscript").value||"Transcript will appear here.";});
+
+  ["clarity","pacing","confidence","structure"].forEach(id=>{
+    $(id).addEventListener("input",()=>$(id+"Val").textContent=$(id).value);
+  });
+
+  $("resetScoresBtn").addEventListener("click",()=>{
+    ["clarity","pacing","confidence","structure"].forEach(id=>{$(id).value=5;$(id+"Val").textContent="5"});
+    $("notes").value="";$("nextFocus").value="";
+  });
+
+  $("repeatBtn").addEventListener("click",()=>{
+    $("notes").value="";$("nextFocus").value="";
+    $("manualTranscript").value="";$("transcript").textContent="Transcript cleared. Repeat the same prompt and deliberately correct one thing.";
+    $("status").textContent="Repeat round ready. Keep the same prompt.";
+    $("wordCount").textContent="0";$("wpm").textContent="0";$("fillerCount").textContent="0";$("sentenceLen").textContent="0";
+  });
+
+  function scoreObj(){
+    return {clarity:+$("clarity").value,pacing:+$("pacing").value,confidence:+$("confidence").value,structure:+$("structure").value};
+  }
+  function average(s){return (Object.values(s).reduce((a,b)=>a+b,0)/4).toFixed(1)}
+
+  $("saveSessionBtn").addEventListener("click",()=>{
+    const auto=analyzeTranscript()||{wc:0,pace:0,fc:0,avg:0,structureScore:0};
+    const s={
+      id:Date.now(),created:new Date().toISOString(),goal:$("goal").options[$("goal").selectedIndex].text,
+      prompt:currentPrompt(),scores:scoreObj(),notes:$("notes").value.trim(),next:$("nextFocus").value.trim(),
+      duration:seconds,wordCount:auto.wc,wpm:auto.pace,fillers:auto.fc,autoStructure:auto.structureScore,
+      transcript:$("manualTranscript").value.trim()
+    };
+    sessions.push(s);persist();renderAll();$("status").textContent="Session saved to this browser.";
+  });
+
+  function esc(str){return String(str||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+  function renderSessions(){
+    $("sessionCount").textContent=`${sessions.length} saved session${sessions.length===1?"":"s"}`;
+    const list=$("sessionList"); list.innerHTML="";
+    if(!sessions.length){list.innerHTML='<div class="micro">No saved sessions yet.</div>'}
+    [...sessions].reverse().forEach((s,ri)=>{
+      const index=sessions.length-ri;
+      const div=document.createElement("div");div.className="session";
+      div.innerHTML=`<div class="session-top"><div><div class="session-title">Session ${index} · ${esc(s.goal)}</div>
+      <div class="session-meta">${new Date(s.created).toLocaleDateString()} · Avg ${average(s.scores)}/10 · ${s.wpm||0} WPM · ${s.fillers||0} fillers</div></div></div>
+      <div class="scores"><span class="pill">Clarity ${s.scores.clarity}</span><span class="pill">Pacing ${s.scores.pacing}</span><span class="pill">Confidence ${s.scores.confidence}</span><span class="pill">Structure ${s.scores.structure}</span></div>
+      ${s.next?`<div class="session-meta" style="margin-top:8px"><strong>Next focus:</strong> ${esc(s.next)}</div>`:""}`;
+      list.appendChild(div);
+    });
+    ["compareA","compareB"].forEach(id=>{
+      const sel=$(id),cur=sel.value;sel.innerHTML='<option value="">Choose session</option>';
+      sessions.forEach((s,i)=>{const o=document.createElement("option");o.value=s.id;o.textContent=`Session ${i+1} — ${s.goal}`;sel.appendChild(o)});
+      sel.value=cur;
+    });
+  }
+
+  function renderDashboard(){
+    const avgs=sessions.map(s=>+average(s.scores));
+    $("bestAvg").textContent=avgs.length?Math.max(...avgs).toFixed(1):"—";
+    const wpms=sessions.map(s=>s.wpm||0).filter(Boolean);
+    $("avgWpm").textContent=wpms.length?Math.round(wpms.reduce((a,b)=>a+b,0)/wpms.length):"—";
+    $("avgFillers").textContent=sessions.length?(sessions.reduce((a,s)=>a+(s.fillers||0),0)/sessions.length).toFixed(1):"—";
+    $("practiceTime").textContent=sessions.length?(sessions.reduce((a,s)=>a+(s.duration||0),0)/60).toFixed(1):"—";
+    drawChart(avgs);
+  }
+
+  function drawChart(vals){
+    const svg=$("trendChart");svg.innerHTML="";
+    const W=640,H=240,p=34;
+    const ns="http://www.w3.org/2000/svg";
+    const line=(x1,y1,x2,y2,stroke="#d5d0c7",width=1)=>{
+      const e=document.createElementNS(ns,"line");Object.entries({x1,y1,x2,y2,stroke,"stroke-width":width}).forEach(([k,v])=>e.setAttribute(k,v));svg.appendChild(e);
+    };
+    [0,2.5,5,7.5,10].forEach(v=>{
+      const y=H-p-(v/10)*(H-2*p);line(p,y,W-p,y);
+      const t=document.createElementNS(ns,"text");t.setAttribute("x",5);t.setAttribute("y",y+4);t.setAttribute("font-size","11");t.setAttribute("fill","#706d66");t.textContent=v;svg.appendChild(t);
+    });
+    if(vals.length===0){
+      const t=document.createElementNS(ns,"text");t.setAttribute("x",W/2);t.setAttribute("y",H/2);t.setAttribute("text-anchor","middle");t.setAttribute("fill","#706d66");t.textContent="Save sessions to build your trend.";svg.appendChild(t);return;
+    }
+    const step=vals.length===1?0:(W-2*p)/(vals.length-1);
+    const pts=vals.map((v,i)=>[p+i*step,H-p-(v/10)*(H-2*p)]);
+    if(vals.length>1){
+      const path=document.createElementNS(ns,"path");path.setAttribute("d","M "+pts.map(pt=>pt.join(" ")).join(" L "));
+      path.setAttribute("fill","none");path.setAttribute("stroke","#1f5f50");path.setAttribute("stroke-width","4");path.setAttribute("stroke-linecap","round");path.setAttribute("stroke-linejoin","round");svg.appendChild(path);
+    }
+    pts.forEach(([x,y],i)=>{
+      const c=document.createElementNS(ns,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r","6");c.setAttribute("fill","#1f5f50");svg.appendChild(c);
+      const t=document.createElementNS(ns,"text");t.setAttribute("x",x);t.setAttribute("y",H-10);t.setAttribute("text-anchor","middle");t.setAttribute("font-size","10");t.setAttribute("fill","#706d66");t.textContent=i+1;svg.appendChild(t);
+    });
+  }
+
+  function renderComparison(){
+    const a=sessions.find(s=>String(s.id)===$("compareA").value);
+    const b=sessions.find(s=>String(s.id)===$("compareB").value);
+    const box=$("compareBox");
+    if(!a||!b||a.id===b.id){box.classList.remove("show");box.innerHTML="";return}
+    const rows=["clarity","pacing","confidence","structure"].map(m=>{
+      const d=b.scores[m]-a.scores[m],sign=d>0?"+":"";
+      return `<div class="compare-row"><span>${m[0].toUpperCase()+m.slice(1)}: ${a.scores[m]}</span><span class="delta">${sign}${d}</span><span style="text-align:right">${b.scores[m]}</span></div>`;
+    }).join("");
+    box.innerHTML=`<strong>Self-review change</strong>${rows}
+      <div class="compare-row"><span>WPM: ${a.wpm||0}</span><span class="delta">${(b.wpm||0)-(a.wpm||0)>=0?"+":""}${(b.wpm||0)-(a.wpm||0)}</span><span style="text-align:right">${b.wpm||0}</span></div>
+      <div class="compare-row"><span>Fillers: ${a.fillers||0}</span><span class="delta">${(b.fillers||0)-(a.fillers||0)>=0?"+":""}${(b.fillers||0)-(a.fillers||0)}</span><span style="text-align:right">${b.fillers||0}</span></div>`;
+    box.classList.add("show");
+  }
+
+  function renderAll(){renderSessions();renderDashboard();renderComparison()}
+  $("compareA").addEventListener("change",renderComparison);$("compareB").addEventListener("change",renderComparison);
+
+  $("clearHistoryBtn").addEventListener("click",()=>{
+    if(confirm("Clear all saved articulation sessions from this browser?")){
+      sessions=[];persist();renderAll();
+    }
+  });
+
+  window.addEventListener("beforeunload",()=>{
+    if(stream)stream.getTracks().forEach(t=>t.stop());
+    if(blobUrl)URL.revokeObjectURL(blobUrl);
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
